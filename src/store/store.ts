@@ -801,6 +801,8 @@ export const useStore = defineStore("app", {
                 "focused",
                 payload.focused
             );
+            console.log("JGL: Setting focus on slot ID: " + getLabelSlotUID(payload));
+            document.getElementById(getLabelSlotUID(payload))?.focus();
         },
 
         changeCaretWithKeyboard(key: string, isLevelScopeChange?: boolean) {  
@@ -861,12 +863,15 @@ export const useStore = defineStore("app", {
             const containerId = getFrameSectionIdFromFrameId(nextCaret.id);
             this.frameObjects[containerId].isCollapsed = false;
 
-            // Set the screen reader focus to the current caret location
-            // TODO(JL): While this does update the focused element and _change_ what the screen reader presents, the
-            // screen reader presents "Section" and "Grouping", not something more semantic related to the program.
-            // We need to wire this up to present something coherent, such as a summary of the current frame (group?)
-            document.getElementById(getFrameUID(nextCaret.id))?.focus();
-            console.log("Setting focus on element: " + getFrameUID(nextCaret.id));
+            // Set the screen reader focus to the frame below the current caret location
+            const frameBelowPosition = nextCaretPosition + 1;
+            // FIXME(JGL): we don't account for scope changes below the caret position
+            const frameBelow = (listOfCaretPositions[frameBelowPosition])
+                ? ({id: listOfCaretPositions[frameBelowPosition].frameId, caretPosition: listOfCaretPositions[frameBelowPosition].caretPosition}) as CurrentFrame
+                : nextCaret;
+            document.getElementById(getFrameUID(frameBelow.id))?.focus();
+            // TODO(JGL): set a visual indicator of the "focused" frame, a glowing border?
+            console.log("JGL:Setting focus on element: " + getFrameUID(frameBelow.id));
         },
 
         setCurrentFrame(newCurrentFrame: CurrentFrame) {
@@ -884,9 +889,13 @@ export const useStore = defineStore("app", {
                 "caretVisibility",
                 newCurrentFrame.caretPosition
             );
-            // Ensure the new caret location has screen reader focus
-            // TODO(JL): update in-tandem with changes to `changeCaretWithKeyboard` above
-            document.getElementById(getFrameUID(newCurrentFrame.id))?.focus();
+            // FIXME(JGL): Ensure the frame below the new caret location has screen reader focus
+            // TODO(JGL): update in-tandem with changes to `changeCaretWithKeyboard` above
+            // const frameBelow = (listOfCaretPositions[nextCaretPosition])
+            //     ? ({id: listOfCaretPositions[nextCaretPosition].frameId, caretPosition: listOfCaretPositions[nextCaretPosition].caretPosition}) as CurrentFrame
+            //     : currentCaret;
+            // document.getElementById(getFrameUID(frameBelow.id))?.focus();
+            // console.log("JGL: Setting focus on element: " + getFrameUID(frameBelow.id));
         },
 
         setCurrentInitCodeValue(frameSlotInfos: SlotCoreInfos){
