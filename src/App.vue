@@ -1,7 +1,10 @@
 <template>
-    <div id="app" class="container-fluid print-full-height">
+    <!-- TODO(JGL): we need the application role somewhere to take ownership of the keyboard
+         control. Does the "app" div make most sense? -->
+    <div id="app" role="application" class="container-fluid print-full-height">
         <div v-if="showAppProgress || setAppNotOnTop" :class="{'app-overlay-pane': true, 'app-progress-pane': showAppProgress}" @contextmenu="handleOverlayRightClick">
             <div v-if="showAppProgress" class="app-progress-container">
+                <!-- TODO(JGL): ARIA role? -->
                 <div class="progress">
                     <div 
                         class="progress-bar progress-bar-striped bg-info progress-bar-animated" 

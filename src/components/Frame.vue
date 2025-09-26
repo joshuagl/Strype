@@ -15,6 +15,7 @@
             tabindex="-1"
             draggable="true"
             @dragstart.self="handleFrameDragStart"
+            :aria-label="accessibleLabel"
         >
             <!-- Make sure the click events are stopped in the links because otherwise, events pass through and mess the toggle of the caret in the editor.
                 Also, the element MUST have the hover event handled for proper styling (we want hovering and selecting to go together) -->
@@ -306,6 +307,10 @@ export default Vue.extend({
             // When that's the case, the whole most outer frame acts as a unit and actions/caret are for that unit.
             return this.isDisabled && this.appStore.frameObjects[getParentOrJointParent(this.frameId)].isDisabled;
         },
+
+        accessibleLabel(): string {
+            return this.computeAccessibleLabel();
+        },
     },
 
     watch:{
@@ -418,6 +423,7 @@ export default Vue.extend({
             // When the frame content has been changed, we clear the potential runtime error
             // needs a Vue.set() to keep reactivity
             Vue.set(this.appStore.frameObjects[this.frameId],"runTimeError", "");
+            // TODO(JGL): this could be where we roll-up the changed content to present to the screen reader
         },
 
         handleContextMenuOpened() {
@@ -1197,6 +1203,11 @@ export default Vue.extend({
             if(this.appStore.frameObjects[this.frameId] && this.hasParsingError){
                 (this.$refs.errorPopover as InstanceType<typeof BPopover>).$emit((isFocusing) ? "open" : "close");
             }
+        },
+
+        computeAccessibleLabel(): string {
+            // this.appStore.getContentForFrameSlot();
+            return "The code presentation for " + this.UID;
         },
     },
 });

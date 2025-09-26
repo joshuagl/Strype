@@ -6,7 +6,7 @@ import {checkCodeErrors, checkStateDataIntegrity, cloneFrameAndChildren, evaluat
 import { AppPlatform, AppVersion, vm } from "@/main";
 import initialStates from "@/store/initial-states";
 import { defineStore } from "pinia";
-import { CustomEventTypes, generateAllFrameCommandsDefs, getAddCommandsDefs, getFocusedEditableSlotTextSelectionStartEnd, getLabelSlotUID, isLabelSlotEditable, setDocumentSelection, parseCodeLiteral, undoMaxSteps, getSelectionCursorsComparisonValue, getEditorMiddleUID, getFrameHeaderUID, getImportDiffVersionModalDlgId, checkEditorCodeErrors, countEditorCodeErrors, getCaretUID, getStrypeCommandComponentRefId, getCaretContainerUID, isCaretContainerElement, AutoSaveKeyNames } from "@/helpers/editor";
+import { CustomEventTypes, generateAllFrameCommandsDefs, getAddCommandsDefs, getFocusedEditableSlotTextSelectionStartEnd, getLabelSlotUID, isLabelSlotEditable, setDocumentSelection, parseCodeLiteral, undoMaxSteps, getSelectionCursorsComparisonValue, getEditorMiddleUID, getFrameHeaderUID, getImportDiffVersionModalDlgId, checkEditorCodeErrors, countEditorCodeErrors, getCaretUID, getStrypeCommandComponentRefId, getCaretContainerUID, isCaretContainerElement, AutoSaveKeyNames, getFrameUID } from "@/helpers/editor";
 import { DAPWrapper } from "@/helpers/partial-flashing";
 import LZString from "lz-string";
 import { getAPIItemTextualDescriptions } from "@/helpers/microbitAPIDiscovery";
@@ -860,6 +860,13 @@ export const useStore = defineStore("app", {
             // but we do need to check if the target container is - and expand it if needed.
             const containerId = getFrameSectionIdFromFrameId(nextCaret.id);
             this.frameObjects[containerId].isCollapsed = false;
+
+            // Set the screen reader focus to the current caret location
+            // TODO(JL): While this does update the focused element and _change_ what the screen reader presents, the
+            // screen reader presents "Section" and "Grouping", not something more semantic related to the program.
+            // We need to wire this up to present something coherent, such as a summary of the current frame (group?)
+            document.getElementById(getFrameUID(nextCaret.id))?.focus();
+            console.log("Setting focus on element: " + getFrameUID(nextCaret.id));
         },
 
         setCurrentFrame(newCurrentFrame: CurrentFrame) {
@@ -877,6 +884,9 @@ export const useStore = defineStore("app", {
                 "caretVisibility",
                 newCurrentFrame.caretPosition
             );
+            // Ensure the new caret location has screen reader focus
+            // TODO(JL): update in-tandem with changes to `changeCaretWithKeyboard` above
+            document.getElementById(getFrameUID(newCurrentFrame.id))?.focus();
         },
 
         setCurrentInitCodeValue(frameSlotInfos: SlotCoreInfos){
@@ -1342,7 +1352,7 @@ export const useStore = defineStore("app", {
 
             // We check the errors in the code applied to the that new state
             nextTick().then(() => {
-                this.wasLastRuntimeErrorFrameId = undefined,
+                this.wasLastRuntimeErrorFrameId = undefined;
                 checkEditorCodeErrors();
                 // To make sure that the error navigator gets updated properly (reactivity) we first set the error count to -1 and then count again in next tick so it notified
                 // because when we load a file, we update the error count value in the state but this error check won't be notified if there are actually

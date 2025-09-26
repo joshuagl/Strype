@@ -274,6 +274,7 @@ export default Vue.extend({
         window.addEventListener(
             "keydown",
             (event: KeyboardEvent) => {
+                // NOTE(JGL): This is where default key handling occurs
                 if (event.repeat && !(!this.appStore.isEditing &&  ["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", "Tab", "Home", "End"].includes(event.key))) {
                     // For all keys except Arrows when not editing, ignore all repeated keypresses, only process the initial press:
                     
@@ -445,11 +446,14 @@ export default Vue.extend({
                             this.appStore.selectMultipleFrames(event.key);
                         }
                         else {
+                            // NOTE(JGL): This is the default movement handler.
+                            // TODO(JGL): we need to ensure the new caret position has screen reader focus when the caret position change
                             // The navigation is "level scope" when the ctrl key is pressed (alt key for macOS)
                             this.appStore.changeCaretPosition(event.key, ((event.ctrlKey && !isMacOSPlatform()) || (event.altKey && isMacOSPlatform())));
                         }
                     }
                     else if(event.key == "Home" || event.key == "End"){
+                        // TODO(JGL): handle screen reader focus here?
                         // For the "home" and "end" key, we move the blue caret to the first or last position of the current main section the caret is in.
                         // This is overriding the natural browser behaviour that scrolls to the top or bottom of the page (at least with Chrome)
                        
