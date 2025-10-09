@@ -101,6 +101,7 @@ import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import scssVars from "@/assets/style/_export.module.scss";
 import { getDateTimeFormatted } from "@/helpers/common";
+import Parser from "@/parser/parser";
 
 //////////////////////
 //     Component    //
@@ -1206,8 +1207,14 @@ export default Vue.extend({
         },
 
         computeAccessibleLabel(): string {
-            // this.appStore.getContentForFrameSlot();
-            return "The code presentation for " + this.UID;
+            // Note: This is nothing more than proof of life. The screen reader does not present _anything_ when
+            // rapidly arrowing through a programme...
+            const parser = new Parser(false, "py");
+            const out = parser.parse({startAtFrameId: this.$props.frameId,
+                stopAtFrameId: this.$props.frameId+1, excludeLoopsAndCommentsAndCloseTry: false, defsLast: true });
+            console.log("JGL: The code presentation for " + this.UID);
+            console.log("JGL: " + out);
+            return out;
         },
     },
 });
