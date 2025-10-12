@@ -801,8 +801,11 @@ export const useStore = defineStore("app", {
                 "focused",
                 payload.focused
             );
-            console.log("JGL: Setting focus on slot ID: " + getLabelSlotUID(payload));
-            document.getElementById(getLabelSlotUID(payload))?.focus();
+            if (payload.focused) {
+                const slotID = getLabelSlotUID(payload);
+                console.log("JGL: Setting focus on slot ID: " + slotID);
+                document.getElementById(slotID)?.focus();
+            }
         },
 
         changeCaretWithKeyboard(key: string, isLevelScopeChange?: boolean) {  
