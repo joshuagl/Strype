@@ -27,6 +27,7 @@
                     </div>
                 </pane>
                 <pane key="2" v-show="isConsoleAreaShowing" :size="(isTabsLayout) ? 100 : (100 - currentSplitterPane1Size)" min-size="5">
+                    <!-- TODO(JGL): should this be an <output /> ? -->
                     <textarea 
                         :id="pythonConsoleId"
                         ref="pythonConsole"
