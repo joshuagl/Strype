@@ -15,8 +15,8 @@
             tabindex="-1"
             draggable="true"
             @dragstart.self="handleFrameDragStart"
-            :aria-label="accessibleLabel"
         >
+<!--            :aria-label="accessibleLabel"-->
             <!-- Make sure the click events are stopped in the links because otherwise, events pass through and mess the toggle of the caret in the editor.
                 Also, the element MUST have the hover event handled for proper styling (we want hovering and selecting to go together) -->
             <vue-context :id="getFrameContextMenuUID" ref="menu" v-show="allowContextMenu" @open="handleContextMenuOpened" @close="handleContextMenuClosed">

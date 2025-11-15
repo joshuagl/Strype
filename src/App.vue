@@ -99,6 +99,7 @@
                 <br/>
             </div>
         </ModalDlg>
+        <div id="aux" class="screen-reader-app" aria-live="polite" aria-atomic="false" aria-relevant="all"></div>
     </div>
 </template>
 
@@ -1765,4 +1766,16 @@ $divider-grey: darken($background-grey, 15%);
 .strype-split-theme .splitpanes--horizontal>.splitpanes__splitter:after {
 	margin-top: 1px
 }
+
+.screen-reader-app {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
 </style>
