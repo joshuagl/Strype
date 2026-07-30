@@ -15,6 +15,7 @@
             tabindex="-1"
             draggable="true"
             @dragstart.self="handleFrameDragStart"
+            :aria-label="accessibleLabel"
         >
             <ContextMenu 
                 :contextMenuItemsDef="frameContextMenuItems"
@@ -110,6 +111,7 @@ import scssVars from "@/assets/style/_export.module.scss";
 import {getDateTimeFormatted, isMacOSPlatform, removeIf} from "@/helpers/common";
 import { vueComponentsAPIHandler } from "@/helpers/vueComponentAPI";
 import { eventBus } from "@/helpers/appContext";
+import Parser from "@/parser/parser";
 
 //////////////////////
 //     Component    //
@@ -356,6 +358,10 @@ export default defineComponent({
             // This computed property indicates whether a frame is disabled as a descendant of a disabled frame.
             // When that's the case, the whole most outer frame acts as a unit and actions/caret are for that unit.
             return this.isDisabled && this.appStore.frameObjects[getParentOrJointParent(this.frameId)].isDisabled;
+        },
+
+        accessibleLabel(): string {
+            return this.computeAccessibleLabel();
         },
     },
 
@@ -1374,6 +1380,14 @@ export default defineComponent({
                     this.toggleErrorPopover.hide();
                 }
             }
+        },
+
+        computeAccessibleLabel(): string {
+            const parser = new Parser(false, "py", true);
+            let out = parser.parse({startAtFrameId: this.frameId, stopAt: {frameId: this.frameId, includeThisFrame: true}, excludeComments: true});
+
+            console.log("JGL: The code presentation for " + "frameId: " + this.frameId + " (UID: " + this.UID +") is:\n" + out);
+            return out;
         },
     },
 });
