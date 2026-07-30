@@ -853,6 +853,11 @@ export const useStore = defineStore("app", {
         setEditableFocus(payload: EditableFocusPayload) {
             // Use Vue.set here because "focused" may not yet exist on the object (it's an optional field)
             (retrieveSlotFromSlotInfos(payload) as BaseSlot).focused = payload.focused;
+            // If the slot is focused set the browser focus for the benefit of access tech
+            if (payload.focused) {
+                const slotID = getLabelSlotUID(payload);
+                document.getElementById(slotID)?.focus();
+            }
         },
 
         changeCaretWithKeyboard(key: string, isLevelScopeChange?: boolean) {  
