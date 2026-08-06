@@ -34,7 +34,7 @@ test.describe("Load/save book projects", () => {
             await page.click("#" + await strypeElIds.getEditorMenuUID());
             await page.locator("." + scssVars.strypeMenuItemClassName, {hasText: "Book..."}).click();
             await page.locator(".open-book-dlg-book-group-item", {hasText: "Chapter 2"}).click();
-            await page.locator(".open-book-dlg-name", {hasText: "fireworks"}).click({clickCount: 2});
+            await page.locator(".open-book-dlg-name", {hasText: /^fireworks$/}).click({clickCount: 2});
             // Selecting a book example loads it asynchronously (Menu.vue awaits
             // selectedProject.projectFile before applying the new state); the visible
             // ".project-name" label only updates once that's truly in place, mirroring the same
@@ -86,7 +86,7 @@ test.describe("Book dialog chapter selection survives dialog opening", () => {
         await page.click("#" + await strypeElIds.getEditorMenuUID());
         await page.locator("." + scssVars.strypeMenuItemClassName, {hasText: "Book..."}).click();
         await page.locator(".open-book-dlg-book-group-item", {hasText: "Chapter 2"}).click();
-        const fireworksEntry = page.locator(".open-book-dlg-name", {hasText: "fireworks"});
+        const fireworksEntry = page.locator(".open-book-dlg-name", {hasText: /^fireworks$/});
         await expect(fireworksEntry).toBeVisible();
 
         // Give the dialog's "shown" event (and anything it might still trigger) every chance to
