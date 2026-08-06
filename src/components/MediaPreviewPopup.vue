@@ -31,7 +31,7 @@ import {getDateTimeFormatted} from "@/helpers/common";
 import {saveAs} from "file-saver";
 import { vueComponentsAPIHandler } from "@/helpers/vueComponentAPI";
 import { BButton } from "bootstrap-vue-next";
-import {createOrGetAudioContext} from "@/helpers/audioContext";
+import {closeAudioContext, createOrGetAudioContext} from "@/helpers/audioContext";
 
 // These bits of text are not translated because they are class names:
 const HTMLImageClass = "<a href='https://strype.org/doc/library/#strype.graphics.Image' target='_blank'>Image</a>";
@@ -104,6 +104,8 @@ export default defineComponent({
             this.hideTimeout = window.setTimeout(() => {
                 this.isVisible = false;
                 this.stopPreviewOnHide();
+                // No more sound can play until the popup is shown (and Preview clicked) again:
+                closeAudioContext();
             }, 300);
         },
         cancelHidePopup() {

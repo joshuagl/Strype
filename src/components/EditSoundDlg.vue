@@ -60,7 +60,7 @@ import { BButton, BvTriggerableEvent } from "bootstrap-vue-next";
 import { vueComponentsAPIHandler } from "@/helpers/vueComponentAPI";
 import { eventBus } from "@/helpers/appContext";
 import { CustomEventTypes } from "@/helpers/editor";
-import {createOrGetAudioContext} from "@/helpers/audioContext";
+import {closeAudioContext, createOrGetAudioContext} from "@/helpers/audioContext";
 
 const previewImageWidth = 300;
 const previewImageHeight = 100;
@@ -160,6 +160,8 @@ export default defineComponent({
             if (this.stopPreview != null) {
                 this.stopPreview();
             }
+            // No more sound can play until this dialog is (re-)shown and Play clicked again:
+            closeAudioContext();
         },
         doReRecord() {
             eventBus.emit(CustomEventTypes.hideStrypeModal, {trigger: "reRecord", componentId: this.dlgId});

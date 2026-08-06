@@ -18,7 +18,7 @@ import { vueComponentsAPIHandler } from "@/helpers/vueComponentAPI";
 import { eventBus } from "@/helpers/appContext";
 import { CustomEventTypes } from "@/helpers/editor";
 import { decodeRecordedAudioBlob, drawScrollingWaveform, readAnalyserPeak, stopMediaStreamTracks, WaveformPeak } from "@/helpers/mediaCapture";
-import { createOrGetAudioContext } from "@/helpers/audioContext";
+import { closeAudioContext, createOrGetAudioContext } from "@/helpers/audioContext";
 
 // The live waveform always shows this many milliseconds of audio before a recording exceeds it,
 // at which point it switches to squashing the whole recording to fit instead (see
@@ -155,6 +155,8 @@ export default defineComponent({
             this.analyserBuffer = null;
             stopMediaStreamTracks(this.stream);
             this.stream = null;
+            // No more sound can play/be captured until this dialog is (re-)shown:
+            closeAudioContext();
         },
 
         // Samples the analyser once per animation frame and redraws the waveform. While not

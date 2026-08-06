@@ -74,6 +74,20 @@ export function createOrGetAudioContext() : AudioContext {
     return audioContext;
 }
 
+// Closes the shared AudioContext, if one exists. Callers should invoke this once they know no
+// more sound will be played until the next createOrGetAudioContext() call (e.g. execution
+// finished, or a media dialog/popup closed) -- this bounds how long a context stays alive, which
+// keeps us out of the long-lived-background-context territory where Safari has been observed to
+// silently stop delivering audio.
+export function closeAudioContext() : void {
+    if (audioContext != null && audioContext.state !== "closed") {
+        audioContext.close().catch((err) => console.warn("Error closing AudioContext (ignoring):", err));
+    }
+    audioContext = null;
+    lastObservedCurrentTime = 0;
+    lastObservedAt = 0;
+}
+
 // Proactively check/recover the audio context whenever the page becomes visible again, since
 // that's the most common point at which a backgrounded AudioContext will have died. This is a
 // no-op if no AudioContext has been created yet.

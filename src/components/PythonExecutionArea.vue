@@ -91,7 +91,7 @@ import {SoundManager} from "@/stryperuntime/sound_manager";
 import {handleAsyncRequests, handleSyncRequests} from "@/stryperuntime/main_bridge_handler";
 import {getPythonClient, isPythonWorkerReady, renderer, serviceWorkerChannel, terminateAndRestartPyodide} from "@/stryperuntime/main_thread_python_handler";
 import { TurtlePixiHandler } from "@/stryperuntime/turtle_pixi_handler";
-import {createOrGetAudioContext} from "@/helpers/audioContext";
+import {closeAudioContext, createOrGetAudioContext} from "@/helpers/audioContext";
 import {clearAllRuntimeErrors, computeFrameSnapshot} from "@/helpers/storeMethods";
 import html2canvas from "html2canvas";
 
@@ -452,6 +452,16 @@ export default defineComponent({
         peaDisplayTabIndex(){
             // When we change tab, we also check the position of the expand/collapse button
             setPythonExecAreaLayoutButtonPos();
+        },
+        isPythonExecuting(nowExecuting: boolean){
+            // Once execution (including any trailing sounds -- see waitingForSoundsAfterNormalCompletion)
+            // has fully finished, close the shared AudioContext rather than leaving it running
+            // indefinitely: it will be recreated on the next run/gesture that needs it (see
+            // createOrGetAudioContext() call sites). This bounds how long a context stays alive
+            // during a session that may otherwise run for hours between executions.
+            if (!nowExecuting) {
+                closeAudioContext();
+            }
         },
     },
 
