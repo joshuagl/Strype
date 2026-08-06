@@ -239,7 +239,12 @@ export default defineComponent({
                 vueComponentsAPIHandler.cloudDriveHandlerComponentAPI?.updateSignInStatus(StrypeSyncTarget.od, true);
                 callback(StrypeSyncTarget.od);
             }
-        },   
+            else{
+                // Signing in failed (e.g. no network connection to Microsoft's servers): let the user know
+                // rather than silently doing nothing.
+                vueComponentsAPIHandler.cloudDriveHandlerComponentAPI?.updateSignInStatus(StrypeSyncTarget.od, false);
+            }
+        },
 
         
         resetOAuthToken() {
@@ -253,8 +258,13 @@ export default defineComponent({
         async testCloudConnection(onSuccessCallback: () => void, onFailureCallBack: () => void){
             const token = await this.getToken(OneDriveTokenPurpose.GRAPH_CHECK_FOLDER).catch((_) => {
                 onFailureCallBack();
-                return;
+                return null;
             });
+            if(token == null){
+                // Getting the token already failed (e.g. no network connection): don't attempt the fetch below,
+                // which would otherwise run again with an "undefined" token and call onFailureCallBack() a second time.
+                return;
+            }
 
             const resp = await fetch("https://graph.microsoft.com/v1.0/me/drive", {
                 method: "GET",

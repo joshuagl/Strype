@@ -309,8 +309,19 @@ export default defineComponent({
                 // This method is the entry point to load a file from a Drive. We check or request to sign-in to a specific Drive here.
                 // (that is redundant with the previous "save" action if we were already syncing, but this method can be called when we were not syncing so it has to be done.)
                 if(cloudDriveComponent.isOAuthTokenNotSet()){
-                    this.signInFn();
-                    // We wait for the signing checks are done, the loading mechanism will continue later in doLoadFile()
+                    // Before attempting to sign in, make sure the Drive's API actually managed to load (it may not have,
+                    // e.g. if there is no network connection to reach it). Without this check, if the API failed to load,
+                    // signInFn() would silently do nothing and the user would get no feedback at all.
+                    cloudDriveComponent.getCloudAPIStatusWhenLoadedOrFailed().then((cloudApiState) => {
+                        if(cloudApiState == CloudDriveAPIState.FAILED){
+                            this.appStore.simpleModalDlgMsg = this.$t("errorMessage.cloudAPIFailed", {apiname: cloudDriveComponent.driveAPIName});
+                            eventBus.emit(CustomEventTypes.showStrypeModal, getAppSimpleMsgDlgId());
+                        }
+                        else{
+                            this.signInFn();
+                            // We wait for the signing checks are done, the loading mechanism will continue later in doLoadFile()
+                        }
+                    });
                 }
                 else{
                 // We test the connection to make sure it's still valid: if so, we continue with the loading, and if not we reset the token and

@@ -55,6 +55,7 @@ export default defineComponent({
             previousCloudFileSharingStatus: CloudFileSharingStatus.UNKNOWN,
             // Specific to Google Drive:
             gapiLoadedState: CloudDriveAPIState.UNLOADED,
+            apiScriptsLoadStarted: false, // Guards ensureApiScriptsLoading() so we only inject the scripts once, and only when actually needed.
             oauthToken : null as string | null,
             devKey: import.meta.env.VITE_GOOGLE_DEVKEY,
             signInCallBack: (cloudTarget: StrypeSyncTarget) => {},
@@ -97,34 +98,78 @@ export default defineComponent({
         },
     },
 
-    created() {
+    methods: {
         // There's two parts to accessing Google Drive: we need to load the Drive API (the GAPI part)
         // but we also need to load Google Identity in order to be able to sign in.
+        // We only start loading these scripts the first time they're actually needed (rather than
+        // unconditionally on every app start), so that users who never touch Google Drive never pay
+        // the cost, and so that a slow/failed load only affects the Drive UI, not the app in general.
+        ensureApiScriptsLoading() {
+            if(this.apiScriptsLoadStarted){
+                return;
+            }
+            this.apiScriptsLoadStarted = true;
 
-        // From https://stackoverflow.com/a/60257961/412908 and https://stackoverflow.com/a/70772647/412908
-        const scripts : { [key: string]: () => void } = {
-            "https://accounts.google.com/gsi/client": () => this.onGSILoad(),
-            "https://apis.google.com/js/api.js" : () => this.onGAPILoad(),
-        };
-        // Can't believe this is how we have to load external scripts in Vue, but that's what the Internet says:
-        Object.keys(scripts).forEach((url) => {
-            let tag = document.createElement("script");
-            tag.onload = scripts[url];
-            tag.src = url;
-            tag.defer = true;
-            tag.async = true;
-            document.head.appendChild(tag);
-        });
-    },
+            // From https://stackoverflow.com/a/60257961/412908 and https://stackoverflow.com/a/70772647/412908
+            const scripts : { [key: string]: () => void } = {
+                "https://accounts.google.com/gsi/client": () => this.onGSILoad(),
+                "https://apis.google.com/js/api.js" : () => this.onGAPILoad(),
+            };
+            // How long we're willing to let a script load attempt hang (e.g. a very slow connection, such
+            // as on a train) before giving up on it. On a plain connection failure the browser reports
+            // onerror quickly, but on a slow connection the fetch can otherwise be left hanging for minutes,
+            // and merely ignoring it isn't enough: as long as the <script> tag stays in the document, the
+            // browser keeps the underlying request open and keeps delaying the page's "load" event on it.
+            // So on timeout we remove the tag, which aborts the in-flight request. This is now only
+            // triggered by an explicit user action (not app startup), so we can afford to wait longer
+            // than we would to protect the page's own load time -- 30s gives a slow-but-working
+            // connection (e.g. on a train) a real chance, while still eventually giving up on a dead one.
+            const scriptLoadTimeoutMs = 30000;
+            // Can't believe this is how we have to load external scripts in Vue, but that's what the Internet says:
+            Object.keys(scripts).forEach((url) => {
+                let tag = document.createElement("script");
+                let timeoutHandle = -1;
+                const markFailed = () => {
+                    console.warn(`Failed to load ${url}`);
+                    this.gapiLoadedState = CloudDriveAPIState.FAILED;
+                };
+                tag.onload = () => {
+                    window.clearTimeout(timeoutHandle);
+                    scripts[url]();
+                };
+                tag.onerror = () => {
+                    // The script could not be loaded (e.g. no network connection to Google's servers).
+                    // Without this, gapiLoadedState would stay UNLOADED forever and gap_client would stay
+                    // null forever, so signing in would silently do nothing rather than failing visibly.
+                    window.clearTimeout(timeoutHandle);
+                    markFailed();
+                };
+                timeoutHandle = window.setTimeout(() => {
+                    // Loading is taking too long (e.g. a very slow connection): stop waiting on it, and
+                    // remove the tag so the browser abandons the request rather than leaving it hanging.
+                    tag.remove();
+                    markFailed();
+                }, scriptLoadTimeoutMs);
+                tag.src = url;
+                tag.defer = true;
+                tag.async = true;
+                document.head.appendChild(tag);
+            });
+        },
 
-    methods: {
         /**
          * Implements CloudDriveComponent
-         **/ 
-        signIn(callback: (cloudTarget: StrypeSyncTarget) => void) {
-            gap_client?.requestAccessToken();
+         **/
+        async signIn(callback: (cloudTarget: StrypeSyncTarget) => void) {
             this.signInCallBack = callback;
-        },   
+            const apiState = await this.getCloudAPIStatusWhenLoadedOrFailed();
+            if(apiState == CloudDriveAPIState.LOADED){
+                gap_client?.requestAccessToken();
+            }
+            // If it failed to load, there's nothing more we can do here: callers (e.g. CloudDriveHandler.loadFile())
+            // already check getCloudAPIStatusWhenLoadedOrFailed() themselves before calling signIn() in the common
+            // path, and show an error message to the user in that case.
+        },
 
         resetOAuthToken() {
             this.oauthToken = null;
@@ -153,8 +198,13 @@ export default defineComponent({
         },
 
         getCloudAPIStatusWhenLoadedOrFailed(): Promise<CloudDriveAPIState> {
-            // If the GAPI isn't responsive within 10 seconds we considered it failed to load...
-            const maxWaitingTimeout = 10000;
+            // This is the common entry point before doing anything that needs the API, so it's also
+            // where we kick off (on first call) the actual lazy loading of the scripts.
+            this.ensureApiScriptsLoading();
+            // If the GAPI isn't responsive within this time we consider it failed to load. Kept in sync
+            // with the script-tag timeout in ensureApiScriptsLoading() -- there's no point giving up here
+            // earlier than that timeout would anyway mark the load as failed.
+            const maxWaitingTimeout = 30000;
             let waitingCounter = 0;
             const checkingStateInterval = 200; // we check the GAPI state very 200 ms when unloaded
             return new Promise<CloudDriveAPIState>((resolve) => {
