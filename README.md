@@ -38,8 +38,9 @@ Releasing
 ---
 
 Publishing a GitHub Release (Releases -> Draft a new release, pick or create a tag, then Publish) automatically
-triggers the `attach-release-build.yml` workflow, which builds a packaged version as above and attaches it to
-that release as a zip file, so anyone can download a ready-to-host copy without needing to build it themselves.
+triggers the `attach-release-build.yml` workflow, which builds packaged versions for the Python and micro:bit
+platforms and attaches them to that release as zip files, so anyone can download a ready-to-host copy without
+needing to build it themselves.
 
 Development
 ---

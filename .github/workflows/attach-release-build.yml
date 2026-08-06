@@ -1,8 +1,8 @@
-name: Attach build zip to Release
+name: Attach build zips to Release
 
 # Fires when a release is published (either from the GitHub UI or `gh release create`).
-# Builds a standalone packaged version of Strype and uploads it as a zip asset on that
-# same release, so it can be downloaded directly from the release page.
+# Builds standalone packaged versions of Strype (Python and micro:bit) and uploads them
+# as zip assets on that same release, so they can be downloaded directly from the release page.
 on:
     release:
         types: [published]
@@ -31,13 +31,22 @@ jobs:
             - name: Install Pyodide
               if: steps.cache-pyodide.outputs.cache-hit != 'true'
               run: npm run build:download-pyodide-libs
-            - name: NPM Build
+            - name: Build Python platform
               run: npm run build:python
-            - name: Zip build output
+            - name: Zip Python build output
               run: |
                   cd dist
-                  zip -r "../strype-${{ github.event.release.tag_name }}.zip" .
-            - name: Upload asset to release
+                  zip -r "../strype-python-${{ github.event.release.tag_name }}.zip" .
+            - name: Build micro:bit platform
+              run: npm run build:microbit
+            - name: Zip micro:bit build output
+              run: |
+                  cd dist
+                  zip -r "../strype-microbit-${{ github.event.release.tag_name }}.zip" .
+            - name: Upload assets to release
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: gh release upload "${{ github.event.release.tag_name }}" "strype-${{ github.event.release.tag_name }}.zip"
+              run: |
+                  gh release upload "${{ github.event.release.tag_name }}" \
+                      "strype-python-${{ github.event.release.tag_name }}.zip" \
+                      "strype-microbit-${{ github.event.release.tag_name }}.zip"
