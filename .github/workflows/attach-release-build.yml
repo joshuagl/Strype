@@ -1,0 +1,43 @@
+name: Attach build zip to Release
+
+# Fires when a release is published (either from the GitHub UI or `gh release create`).
+# Builds a standalone packaged version of Strype and uploads it as a zip asset on that
+# same release, so it can be downloaded directly from the release page.
+on:
+    release:
+        types: [published]
+
+permissions:
+    contents: write
+
+jobs:
+    build-and-attach:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout release tag
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ github.event.release.tag_name }}
+            - name: Install Node.js and NPM
+              uses: volta-cli/action@v4
+            - name: NPM Install
+              run: npm ci
+            - name: Cache Pyodide
+              id: cache-pyodide
+              uses: actions/cache@v4
+              with:
+                  path: public/pyodide
+                  key: ${{ runner.os }}-pyodide-${{ hashFiles('package-lock.json') }}
+            - name: Install Pyodide
+              if: steps.cache-pyodide.outputs.cache-hit != 'true'
+              run: npm run build:download-pyodide-libs
+            - name: NPM Build
+              run: npm run build:python
+            - name: Zip build output
+              run: |
+                  cd dist
+                  zip -r "../strype-${{ github.event.release.tag_name }}.zip" .
+            - name: Upload asset to release
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: gh release upload "${{ github.event.release.tag_name }}" "strype-${{ github.event.release.tag_name }}.zip"
