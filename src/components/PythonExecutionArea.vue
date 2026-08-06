@@ -118,6 +118,15 @@ let switchedToConsoleTabAlreadyThisExecute = false;
 // "Running" case, which stops the sounds (resolving the wait below) and finalises the run.
 let waitingForSoundsAfterNormalCompletion = false;
 
+// Logged (temporarily -- see isServiceWorkerChannelResponsive() in shared_helpers.ts) so the
+// "[SW channel check]"/"[Worker first sync read]"/"[Pyodide slot swap]" log lines can be matched
+// up against which numbered Run click they belong to -- we're chasing a failure that has so far
+// only ever been reported on the *second* execution since page load, never later ones, which
+// points at something specific to run #2's worker (the spare pre-warmed at page load via
+// maybeCreateSpareSlot() in main_thread_python_handler.ts) rather than a general "worker just
+// got swapped in" issue that would equally affect run #3, #4, etc:
+let runCount = 0;
+
 let soundManager : SoundManager | null = null; // Can't initialise this here as we need permissions for audio context
 const turtleCanvas = new OffscreenCanvas(800, 600);
 function makePixiHandler() : TurtlePixiHandler | null {
@@ -515,6 +524,8 @@ export default defineComponent({
             switch (useStore().pythonExecRunningState) {
             case PythonExecRunningState.NotRunning:
                 useStore().pythonExecRunningState = PythonExecRunningState.Running;
+                runCount += 1;
+                console.info(`[Run click ${new Date().toISOString()}] run #${runCount} this page session`);
                 try {
                     useStore().enqueueAnalyticsEvent("run", computeFrameSnapshot());
                     useStore().flushAnalyticsQueue("critical");
@@ -674,14 +685,19 @@ export default defineComponent({
                     console.error("Service worker sync channel not responding; attempting to reclaim control before running");
                     const registration = await navigator.serviceWorker.getRegistration();
                     await registration?.update();
-                    await new Promise<void>((resolve) => {
-                        const timeout = setTimeout(resolve, 1500);
+                    // Logged (temporarily -- see isServiceWorkerChannelResponsive() in
+                    // shared_helpers.ts) so we can tell whether the reclaim actually got a
+                    // controllerchange back, or just fell through the 1.5s timeout unanswered:
+                    const reclaimedViaControllerChange = await new Promise<boolean>((resolve) => {
+                        const timeout = setTimeout(() => resolve(false), 1500);
                         navigator.serviceWorker.addEventListener("controllerchange", () => {
                             clearTimeout(timeout);
-                            resolve();
+                            resolve(true);
                         }, {once: true});
                         registration?.active?.postMessage("claim");
                     });
+                    const respondingAfterReclaim = await isServiceWorkerChannelResponsive(serviceWorkerChannel.baseUrl);
+                    console.info(`Service worker reclaim attempt: ${reclaimedViaControllerChange ? "got controllerchange" : "timed out waiting for controllerchange"}; channel now responsive=${respondingAfterReclaim}`);
                 }
 
                 const syncBridgePromise = handleSyncRequests(renderer, soundManager as SoundManager, turtlePixiHandler, {

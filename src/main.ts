@@ -29,6 +29,28 @@ const loadServiceWorker = async () => {
                 scope: import.meta.env.BASE_URL,
             });
             console.log("SW registered:", registration);
+
+            // Logged (temporarily -- see isServiceWorkerChannelResponsive() in shared_helpers.ts)
+            // to chase a report of Run mysteriously failing mid-session, in a foregrounded tab,
+            // right after a healthy /version check -- the working theory is a new SW version
+            // getting installed/activated (e.g. because the dev server rebuilt
+            // compiled-service-worker.js) and briefly leaving the page's fetches unintercepted
+            // during the handover. A new SW's own console.log calls land in a separate
+            // Worker/Service-Worker inspector target rather than the page's console, so log the
+            // handover from here instead, where it will show up in the normal page console:
+            const logSwState = (label: string, worker: ServiceWorker | null) => {
+                console.info(`[SW registration ${new Date().toISOString()}] ${label}: state=${worker?.state ?? "none"} scriptURL=${worker?.scriptURL ?? "n/a"}`);
+            };
+            logSwState("initial installing", registration.installing);
+            logSwState("initial waiting", registration.waiting);
+            logSwState("initial active", registration.active);
+            registration.addEventListener("updatefound", () => {
+                const newWorker = registration.installing;
+                console.info(`[SW registration ${new Date().toISOString()}] updatefound -- a new service worker version is being installed`);
+                newWorker?.addEventListener("statechange", () => {
+                    logSwState("installing worker statechange", newWorker);
+                });
+            });
         }
         catch (err) {
             console.error(`SW registration failed for ${swUrl} because:`, err);

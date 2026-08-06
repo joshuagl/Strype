@@ -129,6 +129,28 @@ async function urlToDirName(url: string): Promise<string> {
 // Maps a URL to a cache:
 const libraryCaches : Map<string, Map<string, Uint8ClampedArray>> = new Map();
 
+// Logged once per worker instance (temporarily -- see isServiceWorkerChannelResponsive() in
+// shared_helpers.ts), right before the very first blocking sync-message read this worker ever
+// makes. We've seen a repeatable failure where a *second* Run (using a fresh/promoted Pyodide
+// worker created by terminateAndRestartPyodide() -- see main_thread_python_handler.ts) has every
+// one of its reads fall straight through to a real 404 (i.e. NOT intercepted by the service
+// worker) despite the main thread's own /version check reporting the channel fully healthy
+// moments earlier -- while the *first* Run on the page's original worker was fine throughout.
+// The working theory is that a newly created/promoted dedicated Worker isn't always fully
+// registered as a controlled client of the service worker by the time it issues its first
+// *synchronous* (blocking) XHR, specifically in Safari/WebKit -- so logging this worker's own
+// view of navigator.serviceWorker.controller at that exact moment should confirm or rule that
+// out directly:
+let loggedFirstSyncReadDiagnostics = false;
+function logFirstSyncReadDiagnosticsOnce() {
+    if (loggedFirstSyncReadDiagnostics) {
+        return;
+    }
+    loggedFirstSyncReadDiagnostics = true;
+    const sw = ("serviceWorker" in navigator) ? navigator.serviceWorker : undefined;
+    console.info(`[Worker first sync read ${new Date().toISOString()}] navigator.serviceWorker present=${sw != null} controller=${sw?.controller != null} controllerScriptURL=${sw?.controller?.scriptURL ?? "n/a"}`);
+}
+
 const executePython = pyodideExpose(async (
     extras: PyodideExtras,
     pythonCode: string,
@@ -159,6 +181,7 @@ const executePython = pyodideExpose(async (
     // (e.g. console_print for stdout/stderr) have been fully processed by the main thread, per the
     // ordering guarantee described above.
     const syncCatchUpWithMainThread = () => {
+        logFirstSyncReadDiagnosticsOnce();
         makeRawRequest({kind: "sync", request: {request: "dummy"}});
         const reply = extras.readMessage() as (SyncStrypePyodideWorkerResponse | {request: string, error: string});
         if (reply.request != "dummy") {
@@ -377,6 +400,7 @@ runner`);
         }
         
         const bridgeSync: SyncStrypePyodideHandlerFunction = <R extends SyncStrypePyodideWorkerRequest> (req : R) : ResponseFor<R> => {
+            logFirstSyncReadDiagnosticsOnce();
             makeRequest({kind: "sync", request: req});
             const reply = extras.readMessage() as (SyncStrypePyodideWorkerResponse | {request: string, error: string});
             if (reply.request != req.request) {
@@ -533,3 +557,18 @@ self.addEventListener("message", (e : any) => {
         self.updatePort = e.data.updatePort;
     }
 });
+
+// Reports our own navigator.serviceWorker.controller status to the main thread, both immediately
+// on startup and again on any controllerchange. We've confirmed (see logFirstSyncReadDiagnosticsOnce()
+// above, and the PyodideSlot.controlled comment in main_thread_python_handler.ts) a real case where
+// this worker -- specifically the spare pre-warmed at page load -- ends up with no controller at
+// all despite the page itself being controlled, silently breaking every sync-message request it
+// makes (they fall through to a real 404 instead of being intercepted by the service worker). The
+// main thread uses this to detect that and trigger a reclaim before treating this worker as usable:
+function reportControllerStatus() {
+    (self as unknown as DedicatedWorkerGlobalScope).postMessage({controllerStatus: ("serviceWorker" in navigator) && navigator.serviceWorker.controller != null});
+}
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("controllerchange", reportControllerStatus);
+}
+reportControllerStatus();

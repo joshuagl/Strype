@@ -7,10 +7,16 @@ import { serviceWorkerFetchListener } from "sync-message";
 declare let self: ServiceWorkerGlobalScope;
 
 self.addEventListener("install", () => {
+    // Logged (temporarily -- see isServiceWorkerChannelResponsive() in shared_helpers.ts) to help
+    // confirm whether the browser is silently terminating/respawning this worker mid-session even
+    // while the controlled page stays foregrounded the whole time: a fresh "install" appearing
+    // long after the page loaded, with no matching page reload, would indicate exactly that.
+    console.info(`[SW ${new Date().toISOString()}] install`);
     self.skipWaiting(); // activate immediately
 });
 
 self.addEventListener("activate", (event) => {
+    console.info(`[SW ${new Date().toISOString()}] activate`);
     // Claim clients immediately so pages are controlled without reload
     event.waitUntil(self.clients.claim());
 });

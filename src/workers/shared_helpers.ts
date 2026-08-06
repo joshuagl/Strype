@@ -27,6 +27,12 @@ export async function serviceWorkerReadyAndInControl() : Promise<void> {
 // discover the problem ~5s in, via a ServiceWorkerError from deep inside the worker. Kept to a
 // short timeout so a genuinely dead channel is detected fast rather than stalling the Run click:
 export async function isServiceWorkerChannelResponsive(channelBaseUrl: string, timeoutMs = 800) : Promise<boolean> {
+    // Logged (temporarily, while we're chasing down a report of the Run button getting stuck on
+    // "Stop" with nothing happening, even though the page stayed foregrounded/visible throughout)
+    // so a repro can confirm whether this pre-flight check is the thing catching (or failing to
+    // catch) a dead channel -- and whether document.visibilityState really was "visible" the whole
+    // time, ruling backgrounding out directly rather than just by the user's recollection:
+    const logPrefix = `[SW channel check ${new Date().toISOString()}] visibilityState=${document.visibilityState} hasFocus=${document.hasFocus()} controller=${navigator.serviceWorker.controller != null}`;
     try {
         // /version is answered by the sync-message package's own service-worker fetch listener
         // (not anything Strype implements) -- it responds to any request whose URL ends in
@@ -37,10 +43,21 @@ export async function isServiceWorkerChannelResponsive(channelBaseUrl: string, t
         // GET here could report "healthy" when the channel is actually dead. POST to the same
         // unmatched path correctly falls through to a real 404 instead:
         const response = await fetch(channelBaseUrl + "/version", {method: "POST", signal: AbortSignal.timeout(timeoutMs)});
+        console.info(`${logPrefix} -> responsive=${response.ok} (status ${response.status})`);
         return response.ok;
     }
-    catch {
+    catch (err) {
+        console.info(`${logPrefix} -> responsive=false (${err})`);
         return false;
     }
+}
+
+// Logged (temporarily, see isServiceWorkerChannelResponsive() above) so we can see if the
+// controller is changing (e.g. being reclaimed after a termination) while the page is still
+// visible, which would confirm this isn't a backgrounding-related issue:
+if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+        console.info(`[SW controllerchange ${new Date().toISOString()}] visibilityState=${document.visibilityState} hasFocus=${document.hasFocus()}`);
+    });
 }
 

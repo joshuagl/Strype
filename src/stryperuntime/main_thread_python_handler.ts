@@ -38,6 +38,35 @@ interface PyodideSlot {
     client: PyodideClient<any>;
     updatePort: MessagePort;
     ready: boolean;
+    // Whether this worker currently has a service worker controller of its own -- see
+    // reportControllerStatus() in python-execution.ts. We've confirmed (via logging) a real case
+    // where a freshly created worker -- specifically the spare pre-warmed at page load, promoted
+    // for the *second* Run of a session -- ends up with no controller at all, despite the page
+    // itself being controlled: every one of its sync-message requests then silently falls through
+    // to a real 404 instead of being intercepted, which looks to the user like Run doing nothing.
+    // Defaults to false (pessimistic) until the worker actively confirms otherwise:
+    controlled: boolean;
+}
+
+// Only surfaces readiness once the slot has BOTH finished loading Pyodide AND confirmed it has a
+// service worker controller -- see the PyodideSlot.controlled comment above. Without the latter
+// half of this check, a worker could become clickable-via-Run while still uncontrolled:
+function updateReadyFlag(slot: PyodideSlot) : void {
+    if (slot === activeSlot) {
+        isPythonWorkerReady.value = slot.ready && slot.controlled;
+    }
+}
+
+// Asks the service worker to (re-)claim all clients under its scope, including any worker that
+// isn't currently controlled (see PyodideSlot.controlled above). Harmless/idempotent to call for
+// an already-controlled worker. Re-uses the same "claim" message the service worker already
+// handles for the Firefox re-claim workaround (see service-worker.ts):
+async function triggerServiceWorkerReclaim() : Promise<void> {
+    if (!("serviceWorker" in navigator)) {
+        return;
+    }
+    const registration = await navigator.serviceWorker.getRegistration();
+    registration?.active?.postMessage("claim");
 }
 
 function createPyodideSlot() : PyodideSlot | null {
@@ -57,16 +86,35 @@ function createPyodideSlot() : PyodideSlot | null {
     worker.postMessage({updatePort: updateChannel.port1}, [updateChannel.port1]);
 
     const client = new PyodideClient(() => worker, serviceWorkerChannel);
-    const slot: PyodideSlot = {worker, client, updatePort: updateChannel.port2, ready: false};
+    const slot: PyodideSlot = {worker, client, updatePort: updateChannel.port2, ready: false, controlled: false};
+
+    // The worker reports its own navigator.serviceWorker.controller status (see
+    // reportControllerStatus() in python-execution.ts), both once immediately on startup and
+    // again on any controllerchange -- this is how we find out if/when the reclaim below actually
+    // fixed things:
+    worker.addEventListener("message", (e: MessageEvent) => {
+        if (typeof e.data?.controllerStatus === "boolean") {
+            const wasControlled = slot.controlled;
+            slot.controlled = e.data.controllerStatus;
+            if (slot.controlled !== wasControlled) {
+                console.info(`[Pyodide slot controller ${new Date().toISOString()}] worker now reports controlled=${slot.controlled}`);
+            }
+            updateReadyFlag(slot);
+        }
+    });
+    // Proactively ask for a reclaim as soon as the worker exists, rather than waiting until it's
+    // promoted to active and possibly needed immediately -- this gives it the most possible time
+    // to resolve in the background before anyone tries to actually run code on it. It's a no-op
+    // if the worker is already controlled:
+    void triggerServiceWorkerReclaim();
+
     client.call(
         client.workerProxy.onReady,
         Comlink.proxy(() => {
             slot.ready = true;
             // Only surface readiness if this slot is still the active one by the time it
             // finishes loading (it may instead be sitting in the background as the spare):
-            if (slot === activeSlot) {
-                isPythonWorkerReady.value = true;
-            }
+            updateReadyFlag(slot);
         })
     );
     return slot;
@@ -76,8 +124,14 @@ function activateSlot(slot: PyodideSlot | null) : void {
     activeSlot = slot;
     if (slot != null) {
         renderer.setMessageChannel(slot.updatePort);
+        if (!slot.controlled) {
+            // Belt-and-braces alongside the reclaim already triggered in createPyodideSlot(): if
+            // this slot still isn't confirmed controlled by the time it's actually promoted to
+            // active, ask again rather than assuming the earlier attempt will still land in time:
+            void triggerServiceWorkerReclaim();
+        }
     }
-    isPythonWorkerReady.value = slot?.ready ?? false;
+    isPythonWorkerReady.value = (slot != null) && slot.ready && slot.controlled;
 }
 
 // Whether this device looks capable of comfortably running two Pyodide workers at once (the
@@ -159,9 +213,17 @@ export async function terminateAndRestartPyodide() : Promise<void> {
     if (spareSlot != null) {
         const promoted = spareSlot;
         spareSlot = null;
+        // Logged (temporarily -- see isServiceWorkerChannelResponsive() in shared_helpers.ts) to
+        // correlate against the worker-side "[Worker first sync read]" log in python-execution.ts:
+        // we're chasing a repeatable failure where the *second* Run after a restart has its
+        // service-worker sync channel silently stop being intercepted (real 404s instead of the
+        // expected 408 long-poll response), and want to know precisely how long this promoted
+        // worker had existed before it made its first blocking request:
+        console.info(`[Pyodide slot swap ${new Date().toISOString()}] promoted pre-warmed spare worker`);
         activateSlot(promoted);
     }
     else {
+        console.info(`[Pyodide slot swap ${new Date().toISOString()}] no spare available -- creating a fresh worker synchronously`);
         activateSlot(createPyodideSlot());
     }
     // Line up the next spare in the background (a no-op if the device isn't deemed capable of one):
