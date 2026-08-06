@@ -1,0 +1,11 @@
+- file: platform-v1.spy
+  name: platform
+  image: platform.png
+  description: A starter project for a platform jumper game
+
+- file: platform-v2.spy
+  description: Similar to the one above, but with animated walking
+
+- file: smoke.spy
+  image: smoke.png
+  description: A visual smoke effect 

@@ -1,0 +1,160 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":42.76,"splitCollapsed":46.95}
+#(=> peaCommandsSplitterPane2Size:{"tabsCollapsed":57.4}
+#(=> peaSplitViewSplitterPane1Size:{"splitCollapsed":76.76}
+'''fish-school, version 1
+
+A demonstration of flocking behaviour.
+
+This project is part of the book "Creative Python Programming with Strype".
+Authors: Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+from strype.graphics import * 
+from random import randrange 
+from math import hypot 
+import math 
+#(=> Section:Definitions
+#(=> FrameState:FoldToHeader
+def add (v1,v2 ) :
+    return (v1[0] + v2[0],v1[1] + v2[1]) 
+#(=> FrameState:FoldToHeader
+def scale (v1,factor ) :
+    return (v1[0] * factor,v1[1] * factor) 
+#(=> FrameState:FoldToHeader
+def clamp (min_mag,v1,max_mag ) :
+    mag  = math.hypot(v1[0],v1[1]) 
+    if mag < min_mag  :
+        return scale(v1,min_mag / mag) 
+    elif mag > max_mag  :
+        return scale(v1,max_mag / mag) 
+    else :
+        return v1 
+#(=> FrameState:FoldToHeader
+def make_fishes ( ) :
+    fishes  = [] 
+    fish_image  = load_image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACIAAAAQCAYAAABz9a1kAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIqADAAQAAAABAAAAEAAAAADZm0qyAAADzklEQVRIDaVVTWwbRRT+3uxv1saOWwJJSZO4B1QJJG4cgYbSSkUFAaoiTiiHlgNwqcKFAwRVKgcEByg9FBQQp3IgJ0RJGxohIYQ4UIQqkAi1UwSlaZSksZ147d2dx5stTkyJCG5Hlnc0+96bb77vm7eE2xhcPri7Uq0cUioeljL3NpLCDtZREri1Oc3qYqKtM/me4iT1fbiw1Ta0VcBm73lu/x7otVfiON5r+xIRM5JYoxnFICK4rg1lSWlFaISoe673Cezscdr52exm9cxaR0D40qEBqGsfIEgeA2tgVaPe0GDevLxSgO/JX84CqhJE7gkMPnuU6Pno5gzi8r5xcPUo4JbA1gUo9zQVv5i6OZAvDY8C4QTyhGgxRiQsdDKCLjlzwQWWeR5O9xPCznft+cSXH98FrnyFftWPpRhgSVilWZD3EhWnU0Bc2nMK3fFhVCKsrWqDoCMm2zcMttkipaTrriM0OP1+611akK8cCRD+9A0y/EBjKYKXl2ASSuvO24LsHhTikWQhQiNKRbhlEGZTLUpms2KebgdYcY/R0JevmvX1olwe93VyrqzspLdWTdh1Fbl3iLZihfpKDKHhtphQxGkBNoxLrcAXMHeKVEv261Q8P74OJH3721Oj8BYmwqWmQS43wKxKVmd2uJH0979J9RyGbcuhxOBN8VYk0khpdmwiZ7swU3OOiwZtg4weG8MAaIHZWO1sZkCEUYDpr3vg2oxHHxSvWqFcdQUBIv5PT/nH+sbMM7ZuXD2GeoxYPCuW5CCj0NUtPeFGVMe8kIhh2xrf/1zAn/MOyr+7+PFXAeSw+ESOmBM2Im+UhmZOrgPB3GtnVZ76quIPzyVk+1yKGuoXNJwJv+BArh8ZcJ3wwakAhJ29dWlyLDU0Bu6WhhJIt/MERNV7TvzxkamZuoDLD3+KHv005ptARrQ0FKyqz5G5f4TuOlnj0vAY/Oab4ARr15NOsKSxgc+orAUs0pDfK71sWSVQuX00dOZ8qxhx6ZF3MUgv4loTcQ2wlTUD8t+gXWfPtYLMk0sHHtJYmVQF2g654rU6mw6+5TAUmriunExyYslF+1tYO56hgdNX2pOlsx54Uk6aB+nLcPouUv/Hi+0B7XOefceDNfkW0HwBOWGtGsu3RBs//etmGZNbgsANJC5rga9zSMofk77xXnvN1vx/nKkVuvHkuYNFcO3lOGqM2A5vSwU2BjLXTH5kKDAfPaMiWWX5fJxCZvcJI/NGlX/ObglIqwRfHcvUl3/YHzaTva4d3ie751NuWITW3oVCzpmioamZVvx/Pf8CMaZ6fY7ac3kAAAAASUVORK5CYII=") 
+    for i  in range(60)  :
+        f  = Actor(fish_image,randrange(800) - 400,randrange(600) - 300) 
+        f.set_rotation(randrange(360)) 
+        rad  = math.radians(f.get_rotation()) 
+        f.velocity  = (50 * math.cos(rad),50 * math.sin(rad)) 
+        fishes.append(f) 
+    return fishes 
+#(=> FrameState:FoldToHeader
+def heading_to_edge (f ) :
+    x  = f.get_x() 
+    y  = f.get_y() 
+    f.move(50) 
+    h  = f.is_at_edge() 
+    f.set_location(x,y) 
+    return h 
+#(=> FrameState:FoldToHeader
+def average_angle (angles ) :
+    radians  = [] 
+    for angle  in angles  :
+        radians.append(math.radians(angle)) 
+    # Compute the components of the resultant vector
+    sum_sin  = 0 
+    sum_cos  = 0 
+    for rad  in radians  :
+        sum_sin  = sum_sin + math.sin(rad) 
+        sum_cos  = sum_cos + math.cos(rad) 
+    # Calculate the average angle in radians
+    average_radian  = math.atan2(sum_sin,sum_cos) 
+    # Convert the average angle back to degrees
+    average_degree  = math.degrees(average_radian) 
+    # Normalize the result to the range [0, 360)
+    average_degree  = (average_degree + 360) % 360 
+    return average_degree 
+#(=> FrameState:FoldToHeader
+def angle_avoid_collisions (f ) :
+    # Start with no separation force
+    separation_vector  = [0,0] 
+    for g  in f.get_all_nearby(10)  :
+        distance  = hypot(f.get_x() - g.get_x(),f.get_y() - g.get_y()) 
+        # Avoid dividing by zero
+        if distance < 20 and distance > 1  :
+            # Vector pointing away from the neighbor
+            away_vector  = [f.get_x() - g.get_x(),f.get_y() - g.get_y()] 
+            # Normalize the away_vector and scale it inversely to the distance
+            scaled_away_vector  = [away_vector[0] / distance / distance,away_vector[1] / distance / distance] 
+            # Add the scaled vector to the separation_vector
+            separation_vector[0]  = separation_vector[0] + scaled_away_vector[0] 
+            separation_vector[1]  = separation_vector[1] + scaled_away_vector[1] 
+    
+    if separation_vector[0] == 0 and separation_vector[1] == 0  :
+        return None 
+    return math.atan2(separation_vector[1],separation_vector[0]) 
+#(=> FrameState:FoldToHeader
+def get_wall_force (f ) :
+    wall_dist  = 50 
+    dist_to_force  = 4 
+    total  = (0,0) 
+    if f.get_x() < wall_dist - 400  :
+        total  = add(total,(dist_to_force * (-350 - f.get_x()),0)) 
+    if f.get_x() > 400 - wall_dist  :
+        total  = add(total,( - dist_to_force * (f.get_x() - 350),0)) 
+    if f.get_y() < wall_dist - 300  :
+        total  = add(total,(0,dist_to_force * (-250 - f.get_y()))) 
+    if f.get_y() > 300 - wall_dist  :
+        total  = add(total,(0, - dist_to_force * (f.get_y() - 250))) 
+    return total 
+#(=> FrameState:FoldToHeader
+def get_centre_of_mass (f ) :
+    nearby  = f.get_in_range(150) 
+    overall  = (f.get_x(),f.get_y()) 
+    for n  in nearby  :
+        overall  = add(overall,(n.get_x(),n.get_y())) 
+    return scale(overall,1 / (len(nearby) + 1)) 
+#(=> FrameState:FoldToHeader
+def get_repulsion (f ) :
+    nearby  = f.get_in_range(40) 
+    total  = (0,0) 
+    for n  in nearby  :
+        #Work around temporary bug:
+        if f is n  :
+            continue
+        dist  = math.hypot(f.get_x() - n.get_x(),f.get_y() - n.get_y()) 
+        if dist < 40  :
+            if dist == 0  :
+                continue
+            scale  = (40 - dist) / dist 
+            total  = add(total,((f.get_x() - n.get_x()) * scale,(f.get_y() - n.get_y()) * scale)) 
+    return total 
+#(=> FrameState:FoldToHeader
+def get_average_nearby_velocity (f ) :
+    nearby  = f.get_in_range(150) 
+    overall  = f.velocity 
+    for n  in nearby  :
+        #Work around temporary bug:
+        if f is n  :
+            continue
+        overall  = add(overall,(n.velocity)) 
+    return scale(overall,1 / (len(nearby) + 1)) 
+#(=> FrameState:FoldToHeader
+def get_acceleration (f ) :
+    '''Calculate the total acceleration for the fish\'s next step.'''
+    total  = (0,0) 
+    #Avoid walls:
+    total  = add(total,get_wall_force(f)) 
+    #Attraction to nearby fish:
+    com  = get_centre_of_mass(f) 
+    total  = add(total,scale(add(com,(-f.get_x(),-f.get_y())),1 / 7.5)) 
+    #Avoid colliding with nearby fish:
+    total  = add(total,get_repulsion(f)) 
+    #Align with nearby:
+    align  = add(get_average_nearby_velocity(f),scale(f.velocity,-1)) 
+    total  = add(total,scale(align,1 / 8)) 
+    return total 
+#(=> Section:Main
+set_background("#207a8a") 
+fishes  = make_fishes() 
+while True  :
+    for f  in fishes  :
+        f.velocity  = add(f.velocity,get_acceleration(f)) 
+        f.velocity  = clamp(50,f.velocity,200) 
+        a  = add(scale(f.velocity,1 / 15),(f.get_x(),f.get_y())) 
+        f.set_location(a[0],a[1]) 
+        f.set_rotation(math.degrees(math.atan2(f.velocity[1],f.velocity[0]))) 
+    pace(30) 
+#(=> Section:End

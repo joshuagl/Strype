@@ -1,0 +1,130 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":44.55}
+#(=> peaCommandsSplitterPane2Size:{"tabsCollapsed":55.21}
+'''Haunted Mansion, Version 0.2
+
+In this version, items are shown in rooms, and the \'look\' command is implemented.
+
+This project is part of the book "Creative programming with Strype".
+Authors: Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+from collections import namedtuple 
+#(=> Section:Definitions
+def setup ( ) :
+    '''Initialise the game. That is: create all the rooms, items, and the exits between the rooms.'''
+    #All the rooms in the game
+    Room  = namedtuple("Room",["description","long_description"]) 
+    outside  = Room("on an overgrown lawn, in front of a big old building.","You look around. There is a big mansion, crumbling in some places, sinister looking, with gargoyles on the facade. The door is slightly ajar.") 
+    entrance  = Room("in the entrance hall of an old mansion building.","") 
+    library  = Room("the library. It is full of books.","") 
+    study  = Room("in the study. You see a desk full of papers.","") 
+    sitting_room  = Room("in the sitting room. Sofas and armchairs are arranged around a fire place.","") 
+    
+    #Set the exits: which room leads to which other room. Each room has an entry in this dictionary, holding another dictioary with the exits.
+    global exits 
+    exits  = {outside:{"north":entrance},entrance:{"south":outside,"west":sitting_room,"east":library},sitting_room:{"east":entrance},library:{"west":entrance,"north":study},study:{"south":library}} 
+    
+    #All items in this game
+    Item  = namedtuple("Item",["name","description","weight"]) 
+    candle  = Item("candle","a candle, burning dimly with a small flame",100) 
+    bottle  = Item("bottle","a bottle, half full with some liquid",200) 
+    book  = Item("book","an old dusty book",500) 
+    papers  = Item("papers","a stack of papers, filled in small, neat handwriting",100) 
+    
+    #Place the items into the rooms. Each room has an entry in this dictionary with a list of its items
+    global items 
+    items  = {outside:[],entrance:[],library:[book],study:[papers],sitting_room:[candle,bottle]} 
+    
+    global current_room 
+    current_room  = outside 
+def show_intro ( ) :
+    '''Display an opening/welcome text.'''
+    print("        ====  HAUNTED MANSION  ====") 
+    print() 
+    print("Your wake up. It is getting dark. You cannot remember how you got here.") 
+    print("Type 'help' if you need help.") 
+    print() 
+    show_room_description(current_room) 
+def show_room_description (room ) :
+    '''Show the description of the given room. This includes the text describing the room, its exits, and anything else the palyer sees.'''
+    print("You are",current_room.description) 
+    #show items
+    items_in_room  = items.get(current_room) 
+    if len(items_in_room) > 0  :
+        print("You see: ") 
+        for item  in items_in_room  :
+            print("   ",item.description) 
+    #show exits
+    new_exits  = list(exits.get(current_room).keys()) 
+    print("Exits: ",end="") 
+    for exit  in new_exits  :
+        print(exit,end=" ") 
+    print() 
+def get_command ( ) :
+    '''Get a one-wrod or two-word command from the user, via text input. This will return two words (command and second_word). The commnand returned will be a string, the second work is either a string or None.'''
+    print() 
+    words  = [] 
+    while len(words) == 0  :
+        #repeat untilt he user types at least one word
+        input_string  = input("> ") 
+        words  = input_string.split() 
+    if len(words) > 1  :
+        return words[0],words[1] 
+    else :
+        return words[0],None 
+def process_command (command,second_word ) :
+    '''Take a command and second word as parameters, and process the command. The command must be a string, the second word may be a string or None.
+    Return True if we want to quit after this command, otherwise False.'''
+    want_to_quit  = False 
+    match command  :
+        case "go"  :
+            go_room(second_word) 
+        case "look"  :
+            look(second_word) 
+        case "help"  :
+            print_help() 
+        case "quit"  :
+            want_to_quit  = True 
+        case _  :
+            print("I don't know what you mean...") 
+    return want_to_quit 
+def go_room (direction ) :
+    '''Try to go in direction "direction" from the current room. If an exit exists in the direction matching the "direction" string, then enter the next room (make that neighbouring room the current room).'''
+    global current_room 
+    if direction is None  :
+        print("Go where?") 
+    else :
+        current_exits  = exits.get(current_room) 
+        next_room  = current_exits.get(direction) 
+        if next_room is None  :
+            print("There is no door.") 
+        else :
+            current_room  = next_room 
+            show_room_description(current_room) 
+def look (item_name ) :
+    '''Look at an item (that is: print out the item description). If no item is specified, look at the room instead.'''
+    if item_name is None  :
+        print(current_room.long_description) 
+    else :
+        room_items  = items.get(current_room) 
+        for item  in room_items  :
+            if item.name == item_name  :
+                print("You are looking at",item.description) 
+def print_help ( ) :
+    '''Print a help text.'''
+    print("You are lost. You are alone. You wander around in disorientation.") 
+    print() 
+    print("Your command words are:") 
+    print("   go  quit  help") 
+def play ( ) :
+    '''Start the game play. This will loop until the user wants to quit.'''
+    finished  = False 
+    while not finished  :
+        command,second_word  = get_command() 
+        finished  = process_command(command,second_word) 
+    print("Thank you for playing. Goodbye.") 
+#(=> Section:Main
+setup() 
+show_intro() 
+play() 
+#(=> Section:End

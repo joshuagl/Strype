@@ -1,0 +1,56 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":47.91}
+#(=> peaCommandsSplitterPane2Size:{"tabsCollapsed":72.98}
+'''Top-10-songs. Version 1.0
+
+This is a demo project that shows you how to analyse data stored in CSV files with the pandas library.
+It reads a csv file with songs data: songs-UK-2025.csv
+Have a look at that file to see what columns it contains.
+
+For this project to work, it must be stored in a could file system, and the data file must be stored in the same folder as the project.
+
+This project is part of the book "Creative Python Programming with Strype".
+Author: Michael Kölling'''
+#(=> Section:Imports
+import pandas as pd 
+#(=> Section:Definitions
+#(=> Section:Main
+print("====  2025 Top 10 Songs in the UK  ====") 
+print() 
+#Read in the whole csv file
+df  = pd.read_csv("/data/songs-UK-2025.csv") 
+
+#The last column gets loaded as a float, because it has empty values (and int64 cannot hold NaN). Convert the type to Int64, which is a nullable Integer type so that we don't see decimal points in that column.
+df['TOP10-BY-SALES']  = df['TOP10-BY-SALES'].astype('Int64') 
+
+#This is how you print the first few rows:
+#(=> Disabled:print(df.head(5)) 
+
+#This is how you print data from one selected row:
+row  = df.iloc[2] 
+#(=> Disabled:print(row) 
+
+print("Top 10 by sales:") 
+print() 
+#Select only the rows that have a top-10 number: that is, the TOP10 column is not NaN
+top10  = df[df['TOP10-BY-SALES'].notna()] 
+
+#Now sort those rows by the value in the TOP10 column
+top10_sorted  = top10.sort_values('TOP10-BY-SALES') 
+#Select only the three columns we want to see
+top10_sorted_selected_cols  = top10_sorted[['TOP10-BY-SALES','TITLE','ARTIST']] 
+#Print out the result, leaving off the original row number
+print(top10_sorted_selected_cols.to_string(index=False)) 
+
+#The previous 3 operations could have been written in a single line, like this:
+#(=> Disabled:top10_sorted  = top10[['TOP10-BY-SALES','TITLE','ARTIST']].sort_values('TOP10-BY-SALES').to_string(index=False) 
+print() 
+
+#Now do a similar thing, but pick the top 10 songs by the number of weeks they have spent in the top 10
+print("Top 10 by number of weeks spent in the Top 10:") 
+print() 
+#First, select the columns we want, and sort the way we want them
+most_weeks  = df[['WEEKS-IN-TOP10','TITLE','ARTIST']].sort_values('WEEKS-IN-TOP10',ascending=False) 
+#Then slice the first 10 entries from the table and print them
+print(most_weeks[:10].to_string(index=False)) 
+#(=> Section:End

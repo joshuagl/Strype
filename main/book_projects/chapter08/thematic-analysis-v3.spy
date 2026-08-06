@@ -1,0 +1,62 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":39.72}
+'''thematic-analysis, Version 0.3
+
+In this version of the project, we can create a count of all the words in a given text.
+
+This project is part of the book "Creative Python Programming with Strype".
+Authors: Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+import string 
+#(=> Section:Definitions
+#(=> FrameState:FoldToHeader;Frozen
+def read_file (filename ) :
+    '''Read a file from disk and return the content of the file as a single string.
+    
+    Parameter:   
+       filename : str
+           The name of the file to be read. The file must exist.
+    Returns:
+       str: The content of this file as a single string.'''
+    with open(filename,encoding="utf-8")  as f  :
+        return f.read() 
+#(=> FrameState:FoldToHeader;Frozen
+def get_expected_frequencies ( ) :
+    '''Returns a dictionary with expected frequencies for words in the English language.'''
+    result  = {} 
+    with open("/data/word_counts.txt","r")  as f  :
+        for line  in f  :
+            line  = line.strip() 
+            if not line  :
+                continue
+                # skip empty lines
+            parts  = line.split() 
+            if len(parts) != 2  :
+                continue
+            key,value_str  = parts 
+            try :
+                value  = float(value_str) 
+            except ValueError  :
+                continue
+            result[key]  = value 
+    return result 
+def count_words (text ) :
+    '''Return a dictionary with a count for every word in this text'''
+    text  = text.lower() 
+    words  = text.split() 
+    counts  = {} 
+    for word  in words  :
+        word  = word.strip(string.punctuation) 
+        if word in counts  :
+            counts[word]  = counts[word] + 1 
+        else :
+            counts[word]  = 1 
+    return counts 
+#(=> Section:Main
+counts  = count_words("How many cakes could a good cook cook if a good cook could cook cakes?") 
+print(counts) 
+
+text  = read_file("/books/winnie-the-pooh.txt") 
+counts  = count_words(text) 
+print(counts) 
+#(=> Section:End

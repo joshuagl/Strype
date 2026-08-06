@@ -1,0 +1,63 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":41.36}
+#(=> peaCommandsSplitterPane2Size:{"tabsCollapsed":60.25}
+'''text-analysis, Version 0.4
+This project implements some simple text analysis. In this version, we read the text from a textfile and compute some statistics.
+
+This project is part of the book "Creative Python Programming with Strype".
+Authors: Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+from string import punctuation 
+#(=> Section:Definitions
+#helper functions
+#(=> FrameState:FoldToHeader;Frozen
+def read_file (filename ) :
+    '''Read a file from disk and return the content of the file as a single string.
+    
+    Parameter:   
+       filename : str
+           The name of the file to be read. The file must exist in the same 
+           folder in a cloud file system where this program is stored.
+    Returns:
+       str: The content of this file as a single string.'''
+    with open(filename,"r")  as file  :
+        content  = file.read() 
+    return content 
+def number_non_space_chars (text ) :
+    '''Return the number of non-space characters'''
+    non_space  = 0 
+    for char  in text  :
+        if char != " "  :
+            non_space  = non_space + 1 
+    return non_space 
+def number_punctuation (text ) :
+    '''Return the number of punctuation characters in \'text\''''
+    punct_count  = 0 
+    for char  in text  :
+        if char in punctuation  :
+            punct_count  = punct_count + 1 
+    return punct_count 
+def number_of_words (text ) :
+    '''Return the number of words in \'text\''''
+    words  = text.split() 
+    return len(words) 
+def analyse_text (text ) :
+    '''Receive a string as a parameter and print out some statistics about it.'''
+    print(f"Length: {len(text):,} characters") 
+    print(f"Characters without spaces: {number_non_space_chars(text):,}") 
+    print(f"Punctuation characters: {number_punctuation(text):,}") 
+    print(f"Number of words: {number_of_words(text):,}") 
+    print() 
+#(=> Section:Main
+print("Text: Pride and Prejudice") 
+text  = read_file("/books/pride-and-prejudice.txt") 
+analyse_text(text) 
+
+print("Text: War and Peace") 
+text  = read_file("/books/war-and-peace.txt") 
+analyse_text(text) 
+
+print("Text: Winnie the Pooh") 
+text  = read_file("/books/winnie-the-pooh.txt") 
+analyse_text(text) 
+#(=> Section:End

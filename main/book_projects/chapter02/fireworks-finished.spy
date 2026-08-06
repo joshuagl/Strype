@@ -1,0 +1,133 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":45.2}
+#(=> peaCommandsSplitterPane2Size:{"tabsCollapsed":51.89}
+'''fireworks, Version 0.2
+
+In this project, you can place some fireworks rockets to create a fireworks show. The project is used to practice reading function definitions and writing function calls.
+
+This project is part of the book "Creative programming with Strype".
+Authors:  Neil C.C. Brown and Michael Kölling'''
+#(=> Section:Imports
+from strype.graphics import * 
+from time import sleep 
+from math import cos,sin,radians,floor 
+from random import randint 
+#(=> Section:Definitions
+#(=> FrameState:FoldToHeader;Frozen
+def prepare (color ) :
+    '''Prepare the scene for our fireworks. This must be called before rockets can be placed into the world.
+    
+    Parameters
+    ----------
+    color: str
+            The background color of the world. This can be a color name (such as "magenta"), or a web color hex value (eg "#1A2BFF")'''
+    global particles 
+    particles  = [] 
+    set_background(color) 
+#(=> FrameState:FoldToHeader;Frozen
+def interpolate (start,end,d ) :
+    '''This is a helper function to do some calculations when igniting the rockets.'''
+    return start + d * (end - start) 
+#(=> FrameState:FoldToHeader;Frozen
+def make_fades (original ) :
+    '''Makes an array of images, fading the original to nothing'''
+    faded  = [] 
+    for i  in range(50)  :
+        try :
+            size  = 1 - (i / 50) 
+            faded.append(original.clone(size)) 
+        except   :
+            # Possible it gets too small; duplicate final items in that case:
+            faded.push(faded[-1]) 
+    return faded 
+#(=> FrameState:FoldToHeader;Frozen
+def make_particle (sx,sy,ex,ey,ssize,esize,n,makes_trail,explodes,images,delay=0 ) :
+    '''Create a glowing fireworks particle.'''
+    p  = Actor(images[floor((1 - ssize) * (len(images) - 1))],sx,sy) 
+    p.sx  = sx 
+    p.sy  = sy 
+    p.ex  = ex 
+    p.ey  = ey 
+    p.ssize  = ssize 
+    p.esize  = esize 
+    p.total  = n 
+    p.n  = 0 
+    p.delay  = delay 
+    p.makes_trail  = makes_trail 
+    p.explodes  = explodes 
+    p.images  = images 
+    return p 
+#(=> FrameState:FoldToHeader;Frozen
+def make_particle_image (color ) :
+    '''Make an image of a particle with a given color. This is a helper function used by when we place rockets.'''
+    img  = Image(36,36) 
+    c  = color_from_string(color) 
+    c  = Color(c.red,c.green,c.blue,64) 
+    img.set_fill(c) 
+    for i  in range(1,5)  :
+        img.draw_oval(18,18,i * 2.5,i * 2.5,0,360) 
+    return img 
+#(=> FrameState:FoldToHeader;Frozen
+def ignite ( ) :
+    '''Ignite all the rockets that have previously been placed.'''
+    global particles 
+    while len(particles) > 0  :
+        keep  = [] 
+        for p  in particles  :
+            #Implement launch delay:
+            if p.delay > 0  :
+                p.delay  = p.delay - 1 
+                keep.append(p) 
+                continue
+            d  = p.n / p.total 
+            p.set_location(interpolate(p.sx,p.ex,d),interpolate(p.sy,p.ey,d)) 
+            s  = interpolate(p.ssize,p.esize,d) 
+            p.set_image(p.images[floor((1 - s) * (len(p.images) - 1))]) 
+            p.n  = p.n + 1 
+            if p.n >= p.total  :
+                if p.explodes  :
+                    for angle  in range(0,10)  :
+                        angle  = angle * 36 + randint(-20,20) 
+                        keep.append(make_particle(p.ex,p.ey,p.ex + 100 * sin(radians(angle)),p.ey + 100 * cos(radians(angle)),s * 0.75,0,30,True,False,p.images)) 
+                p.remove() 
+                continue
+            elif p.makes_trail  :
+                # Add a trail:
+                x  = p.get_exact_x() 
+                y  = p.get_exact_y() 
+                keep.append(make_particle(x,y,x,y,s,0,10,False,False,p.images)) 
+            keep.append(p) 
+        particles  = keep 
+        pace() 
+#(=> FrameState:FoldToHeader;Frozen
+def place_rocket (color,target_x=0,target_y=0,delay=0 ) :
+    '''Place a rocket for our fireworks. This will not be immediately launched. It will fire when we ignite it using the \'ignite()\' function.
+    
+    Parameters
+    ----------
+    color: str
+            The color of this rocket. This can be a color name (such as "magenta"), or a web color hex value (eg "#E01990")
+    target_x: float, optional
+            The x-coordinate of the target location to aim for
+    target_y: float, optional
+            The y-coordinate of the target location to aim for
+    delay: float, optional
+            How long to wait after igniting until this rocket fires'''
+    size  = 1.0 
+    particle_images  = make_fades(make_particle_image(color)) 
+    p  = make_particle(0,-300,target_x,target_y,size,size,30,True,True,particle_images,int(delay * 20)) 
+    particles.append(p) 
+#(=> Section:Main
+prepare("MidnightBlue") 
+
+place_rocket("magenta") 
+place_rocket("red",300,100) 
+place_rocket("cyan",-300,100) 
+place_rocket("white",0,200,3) 
+place_rocket("limegreen",-100,175,4) 
+place_rocket("limegreen",100,175,4) 
+place_rocket("yellow",-150,150,4.75) 
+place_rocket("yellow",150,150,4.75) 
+
+ignite() 
+#(=> Section:End

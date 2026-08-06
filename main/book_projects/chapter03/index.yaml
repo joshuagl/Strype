@@ -1,0 +1,20 @@
+- file: yellow-fish-v4.spy
+  image: yellow-fish.png
+  description: The next version of the yellow-fish project
+
+- file: yellow-fish-v5.spy
+  description: The last version of the yellow-fish project in this chapter
+
+- asset: shark.png  
+- asset: shrimp.png
+
+- asset: game-over.png
+- asset: you-win.png
+
+- asset: au.wav
+- asset: slurp.wav
+- asset: fanfare.wav
+
+- file: space.spy
+  image: space.png
+  description: A demo of four-directional movement

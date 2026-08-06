@@ -1,0 +1,9 @@
+- name: Number Guessing Game
+  description: A number guessing game
+  image: ngg.png
+  file: ngg.spy
+
+- name: Rock Paper Scissors
+  description: A rock-paper-scissors game
+  image: rps.png
+  file: rps.spy

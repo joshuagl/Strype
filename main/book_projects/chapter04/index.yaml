@@ -1,0 +1,6 @@
+- file: yellow-fish-v6.spy
+  image: yellow-fish.png
+  description: The penultimate version of the yellow-fish project
+
+- file: yellow-fish-v7.spy
+  description: The final version of the yellow-fish project

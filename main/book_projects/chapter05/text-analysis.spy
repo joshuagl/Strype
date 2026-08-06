@@ -1,0 +1,27 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":36.2}
+#(=> peaCommandsSplitterPane2Size:{"tabsCollapsed":60.25}
+'''text-analysis, Version 0.1
+This project is a starting point for a sequence of exercises of analysing text.
+
+This project is part of the book "Creative Python Programming with Strype".
+Authors: Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+#(=> Section:Definitions
+#helper functions
+#(=> FrameState:FoldToHeader
+def read_file (filename ) :
+    '''Read a file from disk and return the content of the file as a single string.
+    
+    Parameter:   
+       filename : str
+           The name of the file to be read. The file must exist in the same 
+           folder in a cloud file system where this program is stored.
+    Returns:
+       str: The content of this file as a single string.'''
+    with open(filename,"r")  as file  :
+        content  = file.read() 
+    return content 
+#(=> Section:Main
+text  = "insert your own name here" 
+#(=> Section:End

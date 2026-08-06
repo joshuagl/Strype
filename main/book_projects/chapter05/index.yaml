@@ -1,0 +1,19 @@
+- file: text-analysis.spy
+  image: book.png
+  description: The starting version of the text analysis project
+
+- file: text-analysis-v2.spy
+  description: The second version of the text analysis project
+
+- file: text-analysis-v3.spy
+  description: The third version of the text analysis project
+  
+- file: text-analysis-v4.spy
+  description: The fourth version of the text analysis project
+  
+- file: text-analysis-v5.spy
+  description: The fifth version of the text analysis project
+
+- file: particles.spy
+  image: particles.png
+  description: A demo of a visual effect (flying particle sparks)

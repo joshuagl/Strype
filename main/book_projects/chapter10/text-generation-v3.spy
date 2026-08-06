@@ -1,0 +1,45 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":42.09}
+#(=> peaExpandedSplitterPane2Size:{"tabsExpanded":50,"splitExpanded":50}
+'''text-generation, Version 0.3
+In this version of the project, we can create bigrams of our text, and we can generate a sequence of words based on these bigrams.
+
+This project is part of the book "Creative Python Programming with Strype".
+Authors: Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+import random 
+#(=> Section:Definitions
+#(=> FrameState:FoldToHeader;Frozen
+def read_file (filename ) :
+    '''Reads the full content of the file and returns it as a string'''
+    with open(filename,encoding="utf-8")  as f  :
+        return f.read() 
+def make_trigrams (text ) :
+    '''Take a text as a parameter and return a list of the bigrams in the text.'''
+    words  = text.split() 
+    trigrams  = zip(words,words[1:],words[2:]) 
+    return list(trigrams) 
+def generate_next_word (prev1,prev2,trigrams ) :
+    '''Given two previous words and a list of trigrams, return a next word by randomly selecting one of the trigrams that matches both words.'''
+    following  = [] 
+    for first,second,third  in trigrams  :
+        if first == prev1 and second == prev2  :
+            following.append(third) 
+    if len(following) == 0  :
+        return random.choice(trigrams)[2] 
+    else :
+        return random.choice(following) 
+#(=> Section:Main
+#(=> Disabled:text  = read_file("/books/pride-and-prejudice.txt") 
+#(=> Disabled:text  = read_file("/books/fairy-tales.txt") 
+text  = read_file("/books/sherlock-holmes.txt") 
+trigrams  = make_trigrams(text) 
+
+word1,word2  = "It","was" 
+print(f"{word1} {word2}",end=" ") 
+for n  in range(80)  :
+    next_word  = generate_next_word(word1,word2,trigrams) 
+    print(next_word,end=" ") 
+    word1  = word2 
+    word2  = next_word 
+#(=> Section:End

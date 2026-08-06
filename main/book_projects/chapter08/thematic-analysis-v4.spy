@@ -1,0 +1,84 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":39.72}
+'''thematic-analysis, Version 0.4
+
+This is the last version of this project discussed in the book. It prints out the top over-used words in a given text.
+
+This project is part of the book "Creative Python Programming with Strype".
+Authors: Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+import string 
+#(=> Section:Definitions
+#(=> FrameState:FoldToHeader;Frozen
+def read_file (filename ) :
+    '''Read a file from disk and return the content of the file as a single string.
+    
+    Parameter:   
+       filename : str
+           The name of the file to be read. The file must exist.
+    Returns:
+       str: The content of this file as a single string.'''
+    with open(filename,encoding="utf-8")  as f  :
+        return f.read() 
+#(=> FrameState:FoldToHeader;Frozen
+def get_expected_frequencies ( ) :
+    '''Returns a dictionary with expected frequencies for words in the English language.'''
+    result  = {} 
+    with open("/data/word_counts.txt","r")  as f  :
+        for line  in f  :
+            line  = line.strip() 
+            if not line  :
+                continue
+                # skip empty lines
+            parts  = line.split() 
+            if len(parts) != 2  :
+                continue
+            key,value_str  = parts 
+            try :
+                value  = float(value_str) 
+            except ValueError  :
+                continue
+            result[key]  = value 
+    return result 
+#(=> FrameState:FoldToHeader
+def print_dict (dict ) :
+    for key,value  in dict.items()  :
+        if value > 10 and len(key) > 4  :
+            print(f"{key}: {value}") 
+def count_words (text ) :
+    '''Return a dictionary with a count for every word in this text'''
+    text  = text.lower() 
+    words  = text.split() 
+    counts  = {} 
+    for word  in words  :
+        word  = word.strip(string.punctuation) 
+        if word in counts  :
+            counts[word]  = counts[word] + 1 
+        else :
+            counts[word]  = 1 
+    return counts 
+def get_overused_words (observed_counts,total_words,frequencies,how_many ) :
+    '''Returns a list of the most over-used words in \'frequencies.'''
+    frequent  = {} 
+    for word,count  in observed_counts.items()  :
+        if word in frequencies  :
+            word_frequency  = count / total_words 
+            if count > 10 and word_frequency > frequencies[word] * 10  :
+                frequent[word]  = count 
+    frequent_words  = sorted(frequent,key=frequent.get,reverse=True) 
+    return frequent_words[:how_many] 
+#(=> Section:Main
+#(=> Disabled:title  = "war-and-peace" 
+#(=> Disabled:title  = "pride-and-prejudice" 
+#(=> Disabled:title  = "three-men-in-a-boat" 
+title  = "winnie-the-pooh" 
+text  = read_file("/books/" + title + ".txt") 
+
+word_counts  = count_words(text) 
+total_words  = len(text.split()) 
+
+freq_words  = get_overused_words(word_counts,total_words,get_expected_frequencies(),12) 
+
+print(f"The book {title} is about the following things:") 
+print(freq_words) 
+#(=> Section:End

@@ -1,0 +1,29 @@
+#(=> Strype:1:std
+'''Strype example program: flowers
+Thir program draws some flowers using turtle graphics.'''
+#(=> Section:Imports
+from turtle import * 
+#(=> Section:Definitions
+def drawSquare ( ) :
+    '''Draw a square of fixed size'''
+    for n  in range(4)  :
+        forward(40) 
+        right(90) 
+def drawFlower (x,y,petal_color ) :
+    '''Draw a flower at a given position, with a given colour'''
+    penup() 
+    setpos((x,y)) 
+    pendown() 
+    color(petal_color) 
+    for _  in range(int(360 / 15))  :
+        drawSquare() 
+        right(15) 
+    color("green") 
+    seth(270) 
+    forward(120) 
+#(=> Section:Main
+speed(0) 
+drawFlower(0,0,"magenta") 
+drawFlower(-100,50,"blue") 
+drawFlower(100,50,"red") 
+#(=> Section:End

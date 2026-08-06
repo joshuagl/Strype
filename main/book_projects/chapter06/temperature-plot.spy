@@ -1,0 +1,37 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":40.58}
+#(=> peaCommandsSplitterPane2Size:{"tabsCollapsed":61.89}
+'''temperature, graph-plot version
+
+A program to read and show temperature data.
+In this version, we use matplotlib to plot the data.
+
+This project is part of the book "Creative Python Programming with Strype".
+Copyright ©: Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+import matplotlib.pyplot as plt 
+#(=> Section:Definitions
+#(=> FrameState:FoldToHeader;Frozen
+def read_file (filename ) :
+    '''Read a text file from disk and return the content of the file as a list of strings, with each line an item in the list.
+    
+    Parameter:   
+       filename : str
+           The name of the file to be read. The file must exist in the same 
+           folder in a cloud file system where this program is stored.
+    Returns:
+       list(str): A list of strings with the lines from the file'''
+    with open(filename,"r")  as file  :
+        all  = file.read() 
+    lines  = all.split() 
+    return lines 
+#(=> Section:Main
+data  = read_file("/data/london-temperature-2025.txt") 
+temp  = [] 
+for elem  in data  :
+    temp.append(float(elem)) 
+
+plt.plot(temp) 
+plt.ylabel('temperature (°C)') 
+plt.show() 
+#(=> Section:End

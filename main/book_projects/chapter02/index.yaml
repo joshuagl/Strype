@@ -1,0 +1,21 @@
+- file: fireworks.spy
+  image: fireworks.png
+  description: Create a firework show using function calls
+
+- file: fireworks-finished.spy
+  description: An example of some fireworks 
+
+- file: knock-knock.spy
+  image: knock-knock.png
+  description: The crab tells the lobster a joke
+  
+- file: fatcat.spy
+  image: fatcat.png
+  description: The starting version of the fatcat project
+  
+- file: fatcat-v2.spy
+  description: The last version of the fatcat project
+
+- file: drum.spy
+  image: drum.png
+  description: Hit the drum, make some noise

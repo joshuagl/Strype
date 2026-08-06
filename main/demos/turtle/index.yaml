@@ -1,0 +1,9 @@
+- name: Flowers
+  description: Draws colourful flowers
+  image: flowers.png
+  file: flowers.spy
+
+- name: Rainbow spiral
+  description: Draws a rainbow spiral
+  image: rainbow.png
+  file: rainbow.spy

@@ -1,0 +1,16 @@
+- file: temperature.spy
+  image: thermometer.png
+  description: The starting version of the temperature analysis project
+
+- file: temperature-v2.spy
+  description: The second version of the temperature analysis project
+
+- file: temperature-v3.spy
+  description: The third version of the temperature analysis project
+  
+- file: temperature-v4.spy
+  description: The fourth version of the temperature analysis project
+
+- file: temperature-plot.spy
+  image: temperature.png
+  description: An extension project - adding a graph to the temperature project

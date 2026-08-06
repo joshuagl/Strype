@@ -1,0 +1,96 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":41.36}
+#(=> peaCommandsSplitterPane2Size:{"tabsCollapsed":60.25}
+'''text-analysis, Version 0.5
+This project implements some simple text analysis. In this version, we read the text from a textfile and compute some statistics.
+
+This project is part of the book "Creative Python Programming with Strype".
+Authors: Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+from string import punctuation 
+#(=> Section:Definitions
+#helper functions
+#(=> FrameState:Frozen
+def read_file (filename ) :
+    '''Read a file from disk and return the content of the file as a single string.
+    
+    Parameter:   
+       filename : str
+           The name of the file to be read. The file must exist in the same 
+           folder in a cloud file system where this program is stored.
+    Returns:
+       str: The content of this file as a single string.'''
+    with open(filename,"r")  as file  :
+        content  = file.read() 
+    return content 
+def number_non_space_chars (text ) :
+    '''Return the number of non-space characters'''
+    non_space  = 0 
+    for char  in text  :
+        if char != " "  :
+            non_space  = non_space + 1 
+    return non_space 
+def number_punctuation (text ) :
+    '''Return the number of punctuation characters in \'text\''''
+    punct_count  = 0 
+    for char  in text  :
+        if char in punctuation  :
+            punct_count  = punct_count + 1 
+    return punct_count 
+def number_of_words (text ) :
+    '''Return the number of words in \'text\''''
+    words  = text.split() 
+    return len(words) 
+def number_of_sentences (text ) :
+    '''Return the number of sentences in \'text\''''
+    count  = 0 
+    for char  in text  :
+        if char in ".?!,:"  :
+            count  = count + 1 
+    return count 
+def number_of_syllables (word ) :
+    '''Return the number of syllables in \'word\''''
+    return round(len(word) / 3.2) 
+def total_syllables (text ) :
+    '''Return the number of syllables in the text'''
+    words  = text.split() 
+    total_syllables  = 0 
+    for word  in words  :
+        total_syllables  = total_syllables + number_of_syllables(word) 
+    return total_syllables 
+def get_reading_ease (words,sentences,syllables ) :
+    '''Calculate the Flesch reading ease score'''
+    return 206.835 - (1.015 * (words / sentences)) - (84.6 * (syllables / words)) 
+def analyse_text (text ) :
+    '''Receive a string as a parameter and print out some statistics about it.'''
+    print(f"Length: {len(text):,} characters") 
+    print(f"Characters without spaces: {number_non_space_chars(text):,}") 
+    print(f"Punctuation characters: {number_punctuation(text):,}") 
+    
+    words  = number_of_words(text) 
+    print(f"Number of words: {words:,}") 
+    
+    sentences  = number_of_sentences(text) 
+    print(f"Number of sentences: {sentences:,}") 
+    
+    syllables  = total_syllables(text) 
+    print(f"Number of syllables: {syllables:,}") 
+    
+    print(f"Reading ease score: {get_reading_ease(words, sentences, syllables):.2f}") 
+    print() 
+#(=> Section:Main
+print("Text: Pride and Prejudice") 
+text  = read_file("/books/pride-and-prejudice.txt") 
+analyse_text(text) 
+
+print("Text: War and Peace") 
+text  = read_file("/books/war-and-peace.txt") 
+analyse_text(text) 
+
+print("Text: Winnie the Pooh") 
+text  = read_file("/books/winnie-the-pooh.txt") 
+analyse_text(text) 
+
+#(=> Disabled:analyse_text("Programming is fun. I enjoy it.") 
+#(=> Disabled:analyse_text("The systematic development of correct computer code instills feelings of pleasure. It creates unquestionable sensations of distinct and surprising enjoyment.") 
+#(=> Section:End
