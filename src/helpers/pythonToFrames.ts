@@ -504,6 +504,10 @@ function transformCommentsAndBlanks(codeLines: string[], format: "py" | "spy") :
                         if (afterEnd != -1) {
                             charIndex = afterEnd;
                         }
+                        else {
+                            // No closing quote on this line; treat the rest of the line as part of the string:
+                            charIndex = line.length;
+                        }
                     }
                     else if (line.slice(charIndex, charIndex+1) == "#") {
                         // Start of a comment and we're not in a string, so rest of the line is comment

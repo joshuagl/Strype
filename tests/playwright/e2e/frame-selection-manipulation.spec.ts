@@ -512,6 +512,22 @@ else :
     print('Bye bye') 
 `]));
     });
+
+    // https://github.com/k-pet-group/Strype/issues/941 -- pasting a line with an unterminated
+    // string quote (e.g. an apostrophe used as punctuation, not a string delimiter) used to hang
+    // the tab entirely rather than being rejected as invalid/nonsense pasted text.  These simply
+    // check the paste completes (rather than hanging) and is rejected, leaving main empty.
+    test("Test pasting text with an unterminated single quote doesn't hang", async ({page}) => {
+        await testPaste(page, "", [], "C'est un chat noir", makeStrypeFile(["", "", ""]));
+    });
+
+    test("Test pasting text with an unterminated double quote doesn't hang", async ({page}) => {
+        await testPaste(page, "", [], "She said \"hello", makeStrypeFile(["", "", ""]));
+    });
+
+    test("Test pasting text with a closed string followed by an unterminated one doesn't hang", async ({page}) => {
+        await testPaste(page, "", [], "\"a\" + \"b", makeStrypeFile(["", "", ""]));
+    });
 });
 
 test.describe("Pasting assignments at section boundaries", () => {
