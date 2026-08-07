@@ -66,6 +66,24 @@ test.describe("Load/save book projects", () => {
     }
 });
 
+test.describe("Loading a book project does not spuriously mark it as modified", () => {
+    // Regression test for #954: loading a book/demo project restores its saved splitter/layout
+    // sizes via a synthetic resize event, which used to be indistinguishable from a real user
+    // drag (both carry a same-shaped "panes" array), so it wrongly flipped the project back to
+    // "modified" immediately after loading. yellow-fish-v7 has a saved peaCommandsSplitterPane2Size
+    // for its layout, so it reliably exercises that path.
+    test("Loading yellow-fish-v7 leaves the project showing as unmodified", async ({page}) => {
+        await page.click("#" + await strypeElIds.getEditorMenuUID());
+        await page.locator("." + scssVars.strypeMenuItemClassName, {hasText: "Book..."}).click();
+        await page.locator(".open-book-dlg-book-group-item", {hasText: "Chapter 4"}).click();
+        await page.locator(".open-book-dlg-name", {hasText: "yellow-fish-v7"}).click({clickCount: 2});
+        // As above, the ".project-name" label only updates once the load (including restoring
+        // the saved divider positions) has fully completed, so no extra wait is needed here.
+        await expect(page.locator(".project-name")).toHaveText("yellow-fish-v7", {timeout: 30000});
+        await expect(page.locator(".gdrive-sync-label", {hasText: "Modified"})).toHaveCount(0);
+    });
+});
+
 test.describe("Book dialog chapter selection survives dialog opening", () => {
     // Regression test for the intermittent "fireworks entry never became clickable" CI failures
     // above: the book dialog used to reset its chapter selection back to Chapter 1 from its

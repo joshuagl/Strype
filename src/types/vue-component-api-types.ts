@@ -28,12 +28,12 @@ export type AppComponentAPI = {
   applyShowAppProgress: (event: AppEvent) => void;
   setStateFromPythonFile: (completeSource: string, fileName: string, lastSaveDate: number, requestFSFileLoadedNotification: boolean, fileLocation: FileSystemFileHandle | "local" | "cloud" | "import") => Promise<void>,
   finaliseOpenShareProject: (message?: {key: string, param: string}) => void,
-  onExpandedPythonExecAreaSplitPaneResize: (event: any, calledForResize?: boolean) => void,
+  onExpandedPythonExecAreaSplitPaneResize: (event: any, calledForResize?: boolean, isProgrammaticRestore?: boolean) => void,
   onStrypeCommandsSplitPaneResize: (event: any, useSpecificPEALayout?: StrypePEALayoutMode) => void,
 };
 
 export type CommandsComponentAPI = {
-  onCommandsSplitterResize: (event: any) => void,
+  onCommandsSplitterResize: (event: any, isProgrammaticRestore?: boolean) => void,
   resetPEACommmandsSplitterDefaultState: () => Promise<void>,
   setCommandsSplitterPane2Size: (v: number) => void,
   // #v-ifdef STRYPE_PLATFORM == VITE_STANDARD_PYTHON_MODE

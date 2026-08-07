@@ -1686,7 +1686,7 @@ export default defineComponent({
         },
 
         // #v-ifdef STRYPE_PLATFORM == VITE_STANDARD_PYTHON_MODE
-        onExpandedPythonExecAreaSplitPaneResize(event: any, calledForResize?: boolean){
+        onExpandedPythonExecAreaSplitPaneResize(event: any, calledForResize?: boolean, isProgrammaticRestore?: boolean){
             // We want to know the size of the second pane (https://antoniandre.github.io/splitpanes/#emitted-events).
             // It will dictate the size of the Python execution area (expanded, with a range between 20% and 80% of the vh)
             const lowerPanelSize = event.panes[1].size as number;
@@ -1701,9 +1701,11 @@ export default defineComponent({
 
                 }
 
-                // A change of divider position triggers a modification notification only when the user actively moves the divider,
-                // we can distinguish between a sitation when the divider is position is loaded and user event by the content of the event
-                if((event?.panes?.length??0) > 1){
+                // A change of divider position triggers a modification notification only when the user actively moves the divider.
+                // We can't infer this from the event's shape (a real Splitpanes "resize" event and the synthetic event used to
+                // restore a saved layout both carry a 2-element "panes" array), so callers doing a programmatic restore must
+                // say so explicitly via isProgrammaticRestore.
+                if(!isProgrammaticRestore){
                     this.appStore.isEditorContentModified = true;
                     this.appStore.editorLastModificationAt = Date.now();
                 }

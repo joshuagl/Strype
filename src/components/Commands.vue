@@ -1211,7 +1211,7 @@ export default defineComponent({
             return waitForPanesSettled();
         },
 
-        onCommandsSplitterResize(event: any) {
+        onCommandsSplitterResize(event: any, isProgrammaticRestore?: boolean) {
             // When the splitter is resized, we need to resize the frame commands container (wrap/unwrap)
             // and the PEA (will take the full space in its pane, breaking the initial 4:3 ratio)
             document.getElementById(getPEATabContentContainerDivId())?.dispatchEvent(new CustomEvent(CustomEventTypes.pythonExecAreaSizeChanged));
@@ -1228,13 +1228,15 @@ export default defineComponent({
                 this.appStore.peaCommandsSplitterPane2Size = {...defaultEmptyStrypeLayoutDividerSettings, [this.appStore.peaLayoutMode??StrypePEALayoutMode.tabsCollapsed]: event.panes[1].size};
             }
 
-            // A change of divider position triggers a modification notification only when the user actively moves the divider,
-            // we can distinguish between a sitation when the divider is position is loaded and user event by the content of the event
-            if(event.panes.length > 1){
+            // A change of divider position triggers a modification notification only when the user actively moves the divider.
+            // We can't infer this from the event's shape (a real Splitpanes "resize" event and the synthetic event used to
+            // restore a saved layout both carry a 2-element "panes" array), so callers doing a programmatic restore must
+            // say so explicitly via isProgrammaticRestore.
+            if(!isProgrammaticRestore){
                 this.appStore.isEditorContentModified = true;
                 this.appStore.editorLastModificationAt = Date.now();
             }
-        }, 
+        },
 
         setPEACommandsSplitterPanesMinSize(onlyResizePEA?: boolean) {
             // Called to get the right min sizes of the pea/Commands splitter.
