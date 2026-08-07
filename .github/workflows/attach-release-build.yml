@@ -27,7 +27,7 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: public/pyodide
-                  key: ${{ runner.os }}-pyodide-${{ hashFiles('package-lock.json') }}
+                  key: ${{ runner.os }}-pyodide-${{ hashFiles('package-lock.json', 'scripts/download-pyodide-libs.cjs') }}
             - name: Install Pyodide
               if: steps.cache-pyodide.outputs.cache-hit != 'true'
               run: npm run build:download-pyodide-libs
