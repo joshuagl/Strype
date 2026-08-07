@@ -43,29 +43,26 @@ scope, rather than one blanket rule for everything under those paths:
 ```apache
 # Scoped to assets/ specifically, not just /(editor|microbit)/ generally --
 # that's Vite's default assetsDir, so every hashed JS/CSS chunk lives here
-# and (short of Vite's own static-copied Pyodide files, excluded below by
-# the FilesMatch not matching their unhashed names) nothing else does. This
-# matters because the FilesMatch pattern alone isn't a reliable hash test:
-# it's unanchored, so a perfectly ordinary hand-written filename like
-# my-javascript-codefile.js also matches ("-codefile" is a hyphen plus 8
-# alphanumeric characters, same shape as a real hash) -- tightening the
-# character class instead (e.g. requiring a digit) would just trade that
-# risk for false negatives on genuine hashes that happen to be all-letters.
-# Scoping to the one directory that's exclusively Vite's own output sidesteps
-# the ambiguity entirely, regardless of what any given filename looks like.
+# and (short of Vite's own static-copied Pyodide files -- see below) nothing
+# else does.
 <LocationMatch "^/(editor|microbit)/assets/">
     # --- Vite's content-hashed build output: safe to cache forever ---
-    # Vite names every hashed JS/CSS chunk "<name>-<hash>.<ext>" (e.g.
-    # index-QHEbX0xQ.js, python-execution-Dmw0KcAm.js) -- the hash changes
-    # whenever the content does, so the browser can keep a cached copy
-    # indefinitely without ever serving stale content.
-    #
-    # Deliberately does NOT match files without a hash suffix, e.g. the
-    # Pyodide files vite-plugin-static-copy copies into assets/ unmodified
-    # (see viteStaticCopyPyodide() in vite.config.mjs) -- their filenames
-    # never change even when their content does, so they must NOT get this
-    # treatment.
-    <FilesMatch "-[A-Za-z0-9_]{6,12}\.(js|css)$">
+    # vite.config.mjs's build.rollupOptions.output inserts a literal
+    # "-vuehashed-" marker before the hash in every hashed filename (e.g.
+    # index-vuehashed-QHEbX0xQ.js) specifically so this pattern can be exact
+    # rather than a guess at what a hash "looks like" -- matching purely on
+    # shape (a hyphen followed by alphanumeric characters) would also match
+    # an ordinary hand-written name like my-javascript-codefile.js
+    # ("-codefile" fits that shape too), and separately, vite-plugin-static-
+    # copy's raw Pyodide files land in this same assets/ directory unmodified
+    # (see viteStaticCopyPyodide() in vite.config.mjs) -- today none of their
+    # names happen to fit a hash-like shape either, but that's incidental,
+    # not guaranteed, and a future Pyodide release could easily ship one that
+    # does. Requiring this exact marker makes both false-positive risks
+    # structural instead of coincidental: only Vite's own hashing ever
+    # produces it, so nothing else ever will, regardless of what any given
+    # filename looks like:
+    <FilesMatch "-vuehashed-[A-Za-z0-9_]+\.(js|css)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
 </LocationMatch>

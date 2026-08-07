@@ -176,6 +176,28 @@ export default defineConfig(({mode}) => {
             },
         },
 
+        // Inserts a literal, distinctive marker before the hash in every content-hashed output
+        // filename (default template is "assets/[name]-[hash].js" etc. -- this just adds
+        // "-vuehashed-" before "[hash]"). A production server can then reliably tell "this is a
+        // hash Vite generated" apart from "this filename happens to look hash-shaped" -- e.g.
+        // matching purely on shape (a hyphen followed by 6-12 alphanumeric characters) would also
+        // match an ordinary hand-written name like my-javascript-codefile.js ("-codefile" fits
+        // that shape too), and separately, vite-plugin-static-copy's raw Pyodide files land in
+        // this same assets/ directory unmodified (see viteStaticCopyPyodide() below) -- today
+        // none of their names happen to fit the shape either, but that's incidental, not
+        // guaranteed, and a future Pyodide release could easily ship one that does. Requiring
+        // this exact marker makes both false-positive risks structural instead of coincidental:
+        // only Vite's own hashing ever produces it, so nothing else ever will:
+        build: {
+            rollupOptions: {
+                output: {
+                    entryFileNames: "assets/[name]-vuehashed-[hash].js",
+                    chunkFileNames: "assets/[name]-vuehashed-[hash].js",
+                    assetFileNames: "assets/[name]-vuehashed-[hash][extname]",
+                },
+            },
+        },
+
         optimizeDeps: { exclude: ["pyodide"] },
 
         worker: { format: 'es' },
