@@ -1,5 +1,14 @@
 name: Playwright Tests
 on: [push,pull_request]
+# A push to a branch that already has an open PR fires both a push event and a pull_request
+# "synchronize" event for the same commit -- without this, that's two full runs of everything
+# below. Group push and pull_request runs for the same branch together (falling back to ref_name
+# for push events, which don't set head_ref) so the second event to arrive cancels the first
+# rather than both running to completion; genuinely independent branches/PRs don't share a group,
+# so this doesn't reduce coverage, just the redundant duplicate:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 jobs:
   test:
     timeout-minutes: 125
