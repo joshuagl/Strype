@@ -1,9 +1,10 @@
 # Apache caching config for strype.org
 
-This documents the `Cache-Control` policy the production Apache server
-(`strype.org/editor`) should apply. It's **not** applied via a `.htaccess`
-file in this repo — add it to the main server/vhost config instead. Requires
-`mod_headers`.
+This documents the `Cache-Control` policy the Apache server hosting
+`strype.org` (both `/editor/` and `/microbit/`, and their `/test/editor/`
+and `/test/microbit/` test-deployment counterparts) should apply. It's
+**not** applied via a `.htaccess` file in this repo — add it to the main
+server/vhost config instead. Requires `mod_headers`.
 
 ## Why
 
@@ -34,18 +35,19 @@ content-hashed build output is meant to be cached.
 
 ## What to change
 
-Scoped to `/editor/` and `/microbit/` specifically -- the two Strype
-platform builds actually deployed on this server -- rather than a
+Scoped to `/editor/` and `/microbit/` (and their `/test/editor/` and
+`/test/microbit/` counterparts on the test server) specifically -- the
+Strype platform builds actually deployed on this server -- rather than a
 server-wide rule, since the same Apache instance serves other things too
 that this policy has no business touching. Split by file type within that
 scope, rather than one blanket rule for everything under those paths:
 
 ```apache
-# Scoped to assets/ specifically, not just /(editor|microbit)/ generally --
-# that's Vite's default assetsDir, so every hashed JS/CSS chunk lives here
-# and (short of Vite's own static-copied Pyodide files -- see below) nothing
-# else does.
-<LocationMatch "^/(editor|microbit)/assets/">
+# Scoped to assets/ specifically, not just /(test/)?(editor|microbit)/
+# generally -- that's Vite's default assetsDir, so every hashed JS/CSS
+# chunk lives here and (short of Vite's own static-copied Pyodide files --
+# see below) nothing else does.
+<LocationMatch "^/(test/)?(editor|microbit)/assets/">
     # --- Vite's content-hashed build output: safe to cache forever ---
     # vite.config.mjs's build.rollupOptions.output inserts a literal
     # "-vuehashed-" marker before the hash in every hashed filename (e.g.
@@ -72,16 +74,17 @@ scope, rather than one blanket rule for everything under those paths:
 # referenced via indexURL in src/workers/python-execution.ts) is scoped by
 # Pyodide's own version, so a future upgrade lands at a brand new path
 # rather than overwriting this one in place -- nothing will ever change at
-# a URL a browser has already fetched. (Only /editor/ actually ships this
-# today -- micro:bit runs on-device, not via Pyodide -- but matching both
-# costs nothing and doesn't need updating if that ever changes.)
-<LocationMatch "^/(editor|microbit)/pyodide/[^/]+/">
+# a URL a browser has already fetched. (Only /editor/ and /test/editor/
+# actually ship this today -- micro:bit runs on-device, not via Pyodide --
+# but matching both costs nothing and doesn't need updating if that ever
+# changes.)
+<LocationMatch "^/(test/)?(editor|microbit)/pyodide/[^/]+/">
     Header set Cache-Control "public, max-age=31536000, immutable"
 </LocationMatch>
 ```
 
 Everything else — `index.html`, `compiled-service-worker.js`, any other
-unhashed file, and anything outside `/editor/` or `/microbit/` entirely —
+unhashed file, and anything outside `/(test/)?(editor|microbit)/` entirely —
 should keep the existing short/no-cache handling. That's deliberate, not
 an oversight: those are exactly the files that must always be fetched
 fresh, since they're what tell the browser which hashed filenames (and
