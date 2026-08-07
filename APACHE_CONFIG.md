@@ -34,41 +34,50 @@ content-hashed build output is meant to be cached.
 
 ## What to change
 
-Split the policy by file type, rather than one blanket rule for everything:
+Scoped to `/editor/` and `/microbit/` specifically -- the two Strype
+platform builds actually deployed on this server -- rather than a
+server-wide rule, since the same Apache instance serves other things too
+that this policy has no business touching. Split by file type within that
+scope, rather than one blanket rule for everything under those paths:
 
 ```apache
-# --- Vite's content-hashed build output: safe to cache forever ---
-# Vite names every hashed JS/CSS chunk "<name>-<hash>.<ext>" (e.g.
-# index-QHEbX0xQ.js, python-execution-Dmw0KcAm.js) -- the hash changes
-# whenever the content does, so the browser can keep a cached copy
-# indefinitely without ever serving stale content.
-#
-# Deliberately does NOT match files without a hash suffix, e.g. the Pyodide
-# files vite-plugin-static-copy copies into assets/ unmodified (see
-# viteStaticCopyPyodide() in vite.config.mjs) -- their filenames never
-# change even when their content does, so they must NOT get this treatment.
-<FilesMatch "-[A-Za-z0-9_]{6,12}\.(js|css)$">
-    Header set Cache-Control "public, max-age=31536000, immutable"
-</FilesMatch>
+<LocationMatch "^/(editor|microbit)/">
+    # --- Vite's content-hashed build output: safe to cache forever ---
+    # Vite names every hashed JS/CSS chunk "<name>-<hash>.<ext>" (e.g.
+    # index-QHEbX0xQ.js, python-execution-Dmw0KcAm.js) -- the hash changes
+    # whenever the content does, so the browser can keep a cached copy
+    # indefinitely without ever serving stale content.
+    #
+    # Deliberately does NOT match files without a hash suffix, e.g. the
+    # Pyodide files vite-plugin-static-copy copies into assets/ unmodified
+    # (see viteStaticCopyPyodide() in vite.config.mjs) -- their filenames
+    # never change even when their content does, so they must NOT get this
+    # treatment.
+    <FilesMatch "-[A-Za-z0-9_]{6,12}\.(js|css)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</LocationMatch>
 
 # --- The Pyodide runtime: also safe to cache forever, once versioned ---
 # public/pyodide/<version>/ (built by scripts/download-pyodide-libs.cjs,
 # referenced via indexURL in src/workers/python-execution.ts) is scoped by
 # Pyodide's own version, so a future upgrade lands at a brand new path
 # rather than overwriting this one in place -- nothing will ever change at
-# a URL a browser has already fetched.
-<LocationMatch "^/editor/pyodide/[^/]+/">
+# a URL a browser has already fetched. (Only /editor/ actually ships this
+# today -- micro:bit runs on-device, not via Pyodide -- but matching both
+# costs nothing and doesn't need updating if that ever changes.)
+<LocationMatch "^/(editor|microbit)/pyodide/[^/]+/">
     Header set Cache-Control "public, max-age=31536000, immutable"
 </LocationMatch>
 ```
 
-Everything else — `index.html`, `compiled-service-worker.js`, and any other
-unhashed file — should keep the existing short/no-cache handling. That's
-deliberate, not an oversight: those are exactly the files that must always
-be fetched fresh, since they're what tell the browser which hashed
-filenames (and which Pyodide version) are current. Caching *those* long
-would defeat the whole point, leaving a browser with no way to ever
-discover a new build.
+Everything else — `index.html`, `compiled-service-worker.js`, any other
+unhashed file, and anything outside `/editor/` or `/microbit/` entirely —
+should keep the existing short/no-cache handling. That's deliberate, not
+an oversight: those are exactly the files that must always be fetched
+fresh, since they're what tell the browser which hashed filenames (and
+which Pyodide version) are current. Caching *those* long would defeat the
+whole point, leaving a browser with no way to ever discover a new build.
 
 `<LocationMatch>` needs to live in the main server config (`<VirtualHost>`
 block or included file) — it isn't valid inside `.htaccess`.
