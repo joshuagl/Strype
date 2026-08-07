@@ -69,6 +69,19 @@ async function triggerServiceWorkerReclaim() : Promise<void> {
     registration?.active?.postMessage("claim");
 }
 
+// How many times in a row we'll automatically replace an *active* slot whose worker failed to even
+// load (see the "error" listener in createPyodideSlot() below) before giving up and leaving Run
+// disabled rather than retrying forever. Reset to 0 whenever any slot successfully finishes loading.
+// A handful of retries is enough to ride out a genuinely transient blip (a dropped request, a brief
+// server hiccup); it will *not* help the confirmed real-world cause we chased this down from: the
+// page's own already-loaded bundle references this worker's script by a content hash baked in at
+// build time, and if a deploy has replaced the site's assets since this page loaded, that exact file
+// is gone for good (GitHub Pages caps every asset -- hashed or not -- at a 10-minute Cache-Control,
+// so any tab left open longer than that can easily outlive a deploy). No amount of local retrying
+// fixes that; only reloading the page does, which is a separate piece of work:
+const maxActiveSlotLoadRetries = 3;
+let activeSlotLoadRetriesUsed = 0;
+
 function createPyodideSlot() : PyodideSlot | null {
     if (sessionStorage.getItem("TestingNoPyodide")) {
         console.info("Skipping Pyodide as in testing mode");
@@ -108,10 +121,47 @@ function createPyodideSlot() : PyodideSlot | null {
     // if the worker is already controlled:
     void triggerServiceWorkerReclaim();
 
+    // Only fires for a worker that never gets going at all -- its script fails to load, or it
+    // throws before ever calling onReady below. A worker that's already up and running has its own
+    // error handling elsewhere (see the .catch() around client.call() in PythonExecutionArea.vue);
+    // this is specifically for the case confirmed by the "error" listener's own comment above the
+    // retry counter: a slot that's dead on arrival, which would otherwise sit with
+    // ready=false/controlled=false forever, with nothing retrying it and nothing telling anyone why:
+    worker.addEventListener("error", (e: ErrorEvent) => {
+        if (slot.ready) {
+            // Already up and running by the time this fired -- not the load-failure case this
+            // handles, so leave it alone rather than tearing down a working worker:
+            return;
+        }
+        console.error(`[Pyodide worker load failed ${new Date().toISOString()}] ${e.message || "unknown error"}`);
+        slot.worker.terminate();
+        if (slot === spareSlot) {
+            // Just a background optimisation -- drop it and let the next maybeCreateSpareSlot()
+            // call (made after every run stops, see terminateAndRestartPyodide() below) try again:
+            spareSlot = null;
+        }
+        else if (slot === activeSlot) {
+            // This one is actually blocking Run, so it's worth retrying -- bounded, with a short
+            // backoff, so a persistently stale page doesn't hammer the server forever:
+            if (activeSlotLoadRetriesUsed < maxActiveSlotLoadRetries) {
+                activeSlotLoadRetriesUsed++;
+                const attempt = activeSlotLoadRetriesUsed;
+                console.info(`[Pyodide active slot retry ${new Date().toISOString()}] attempt ${attempt}/${maxActiveSlotLoadRetries}`);
+                setTimeout(() => activateSlot(createPyodideSlot()), 500 * attempt);
+            }
+            else {
+                console.error(`[Pyodide active slot retry ${new Date().toISOString()}] giving up after ${maxActiveSlotLoadRetries} failed attempts -- Run will stay disabled until the page is reloaded`);
+                activateSlot(null);
+            }
+        }
+    });
+
     client.call(
         client.workerProxy.onReady,
         Comlink.proxy(() => {
             slot.ready = true;
+            // A successful load is good evidence whatever was wrong (if anything) has cleared up:
+            activeSlotLoadRetriesUsed = 0;
             // Only surface readiness if this slot is still the active one by the time it
             // finishes loading (it may instead be sitting in the background as the spare):
             updateReadyFlag(slot);

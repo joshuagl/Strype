@@ -12,6 +12,20 @@ import { zipDir } from "./scripts/zip-dir.js";
 import checker from 'vite-plugin-checker';
 import {randomUUID} from "node:crypto";
 
+// Reads the exact resolved Pyodide version from package-lock.json -- must match the same lookup
+// in scripts/download-pyodide-libs.cjs, which uses this same version as the folder name under
+// public/pyodide/ (see the comment on indexURL in python-execution.ts for why: the folder needs a
+// version segment so it's safe to cache indefinitely, and the two need to agree on that segment or
+// the runtime will fetch a URL that was never downloaded there):
+function getPyodideVersion() {
+    const lock = JSON.parse(fs.readFileSync(path.resolve(__dirname, "package-lock.json"), "utf-8"));
+    const version = lock.packages?.["node_modules/pyodide"]?.version ?? lock.dependencies?.pyodide?.version;
+    if (!version) {
+        throw new Error("Could not find pyodide version in package-lock.json");
+    }
+    return version;
+}
+
 function zipPysrcPlugin() {
     let running = false;
     const run = async () => {
@@ -151,6 +165,7 @@ export default defineConfig(({mode}) => {
             __BUILD_GIT_HASH__: JSON.stringify(
                 execSync("git rev-parse --short=8 HEAD").toString().trim()
             ),
+            __PYODIDE_VERSION__: JSON.stringify(getPyodideVersion()),
         },
 
         resolve: {

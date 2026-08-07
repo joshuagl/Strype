@@ -92,7 +92,13 @@ import {createLazyFetchFS} from "@/stryperuntime/pyodide-emscript-fetch-fs";
 declare const self: PyodideWorkerGlobalScope & { updatePort: MessagePort };
 
 async function loadOnly() : Promise<PyodideInterface> {
-    const pyodide = await loadPyodideAndPackage({url: `${import.meta.env.BASE_URL}pysrc.zip`, format: "zip"}, () => loadPyodide({indexURL: `${import.meta.env.BASE_URL}pyodide/`}));
+    // The version segment here is deliberate, not incidental: it's what lets the deployed server
+    // mark this whole directory as cacheable forever (see scripts/download-pyodide-libs.cjs, which
+    // downloads into the matching public/pyodide/<version>/ folder, and the server config
+    // documented in APACHE_CONFIG.md). A stable, unversioned path would mean either never caching
+    // this multi-megabyte payload, or risking a browser never picking up a future Pyodide upgrade
+    // because the URL never changed:
+    const pyodide = await loadPyodideAndPackage({url: `${import.meta.env.BASE_URL}pysrc.zip`, format: "zip"}, () => loadPyodide({indexURL: `${import.meta.env.BASE_URL}pyodide/${__PYODIDE_VERSION__}/`}));
     
     // Register our strype.graphics etc modules with Pyodide by pointing it to the Javascript:
     pyodide.registerJsModule("strype_bridge", strype_bridge);
