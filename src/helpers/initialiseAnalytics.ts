@@ -8,6 +8,7 @@ import {
     initAnalyticsCountry,
     initAnalyticsPlatform,
     initAnalyticsSession,
+    initAnalyticsUserAgent,
     initAnalyticsUserId,
     trackAnalyticsLocaleChange,
 } from "@/store/analytics";
@@ -16,6 +17,7 @@ export function initialiseAnalytics(): void {
     initAnalyticsUserId();
     initAnalyticsSession();
     initAnalyticsPlatform();
+    initAnalyticsUserAgent();
     startSessionTracking();
     void initAnalyticsCountry();
 

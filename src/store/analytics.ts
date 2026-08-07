@@ -1,4 +1,5 @@
 import { fetchUserCountry, type UserCountry } from "@/helpers/analyticsCountry";
+import { detectOsAndBrowser } from "@/helpers/analyticsUserAgent";
 import { Analytics_batch_max_events, Analytics_queue_overflow_cap } from "@/helpers/analyticsConstants";
 import { StrypeSyncTarget } from "@/types/types";
 
@@ -15,6 +16,9 @@ export type AnalyticsFlushReason = "interval" | "size_cap" | "critical" | "unloa
 export const analyticsState = {
     countryCode: null as string | null,
     countryName: null as string | null,
+    os: "" as string,
+    browserName: "" as string,
+    browserVersion: null as string | null,
     userId: "" as string,
     sessionStartTime: 0 as number,
     activeSessionTime: 0 as number,
@@ -50,6 +54,13 @@ export function initAnalyticsPlatform(): void {
     const path = (typeof window !== "undefined") ? window.location.pathname.toLowerCase() : "";
     analyticsState.platform = path.includes("microbit") ? "microbit" : "editor";
     // #v-endif
+}
+
+export function initAnalyticsUserAgent(): void {
+    const {os, browserName, browserVersion} = detectOsAndBrowser();
+    analyticsState.os = os;
+    analyticsState.browserName = browserName;
+    analyticsState.browserVersion = browserVersion;
 }
 
 export function setAnalyticsCountry(country: UserCountry): void {
@@ -106,6 +117,9 @@ export function flushAnalyticsQueue(reason: AnalyticsFlushReason): void {
         platform: analyticsState.platform,
         countryCode: analyticsState.countryCode,
         countryName: analyticsState.countryName,
+        os: analyticsState.os,
+        browserName: analyticsState.browserName,
+        browserVersion: analyticsState.browserVersion,
         flushReason: reason,
         events: batch,
     });
