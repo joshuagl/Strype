@@ -8,8 +8,5 @@
 - file: text-generation-v3.spy
   description: The third version of the text generation project
 
-- file: text-generation-v4.spy
-  description: The fourth version of the text generation project
-
 - file: text-generation-advanced.spy
   description: A version written with some more advanced Python syntax
