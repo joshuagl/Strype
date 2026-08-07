@@ -41,7 +41,19 @@ that this policy has no business touching. Split by file type within that
 scope, rather than one blanket rule for everything under those paths:
 
 ```apache
-<LocationMatch "^/(editor|microbit)/">
+# Scoped to assets/ specifically, not just /(editor|microbit)/ generally --
+# that's Vite's default assetsDir, so every hashed JS/CSS chunk lives here
+# and (short of Vite's own static-copied Pyodide files, excluded below by
+# the FilesMatch not matching their unhashed names) nothing else does. This
+# matters because the FilesMatch pattern alone isn't a reliable hash test:
+# it's unanchored, so a perfectly ordinary hand-written filename like
+# my-javascript-codefile.js also matches ("-codefile" is a hyphen plus 8
+# alphanumeric characters, same shape as a real hash) -- tightening the
+# character class instead (e.g. requiring a digit) would just trade that
+# risk for false negatives on genuine hashes that happen to be all-letters.
+# Scoping to the one directory that's exclusively Vite's own output sidesteps
+# the ambiguity entirely, regardless of what any given filename looks like.
+<LocationMatch "^/(editor|microbit)/assets/">
     # --- Vite's content-hashed build output: safe to cache forever ---
     # Vite names every hashed JS/CSS chunk "<name>-<hash>.<ext>" (e.g.
     # index-QHEbX0xQ.js, python-execution-Dmw0KcAm.js) -- the hash changes
