@@ -84,7 +84,8 @@ import {SpriteManager} from "@/stryperuntime/image_and_collisions";
 import {asyncBridge, PyodideWorkerGlobalScope, syncBridge} from "@/workers/python_execution_type";
 import {getFSForEmscripten} from "@/stryperuntime/pyodide-emscripten-cloud-fs";
 import { assetsFilePrefixes, createLazyFetchAssetsFS } from "@/stryperuntime/pyodide-emscripten-assets-fs";
-import {PyodideErrorDetails} from "@/workers/shared_helpers";
+import {isServiceWorkerChannelResponsive, PyodideErrorDetails} from "@/workers/shared_helpers";
+import {makeServiceWorkerChannel} from "sync-message";
 import {createLazyFetchFS} from "@/stryperuntime/pyodide-emscript-fetch-fs";
 
 // We only specify updatePort here as we don't want other files using it directly:
@@ -558,17 +559,38 @@ self.addEventListener("message", (e : any) => {
     }
 });
 
-// Reports our own navigator.serviceWorker.controller status to the main thread, both immediately
-// on startup and again on any controllerchange. We've confirmed (see logFirstSyncReadDiagnosticsOnce()
-// above, and the PyodideSlot.controlled comment in main_thread_python_handler.ts) a real case where
-// this worker -- specifically the spare pre-warmed at page load -- ends up with no controller at
-// all despite the page itself being controlled, silently breaking every sync-message request it
-// makes (they fall through to a real 404 instead of being intercepted by the service worker). The
-// main thread uses this to detect that and trigger a reclaim before treating this worker as usable:
-function reportControllerStatus() {
-    (self as unknown as DedicatedWorkerGlobalScope).postMessage({controllerStatus: ("serviceWorker" in navigator) && navigator.serviceWorker.controller != null});
+// Reports whether this worker's own sync-message requests are actually being intercepted by the
+// service worker, both immediately on startup and again on any controllerchange. We've confirmed
+// (see logFirstSyncReadDiagnosticsOnce() above, and the PyodideSlot.controlled comment in
+// main_thread_python_handler.ts) a real case where this worker -- specifically the spare
+// pre-warmed at page load -- ends up with no controller at all despite the page itself being
+// controlled, silently breaking every sync-message request it makes (they fall through to a real
+// 404 instead of being intercepted). The main thread uses this to detect that and trigger a
+// reclaim before treating this worker as usable.
+//
+// This deliberately checks via a real round-trip fetch (isServiceWorkerChannelResponsive) rather
+// than inspecting navigator.serviceWorker.controller directly: that introspection API isn't
+// exposed to Workers at all in Chromium (crbug.com/40364838), and even where it is (Firefox 133+),
+// we've observed it can stay null indefinitely from inside a worker despite the service worker
+// already correctly intercepting that same worker's fetches -- either way, trusting it here would
+// leave isPythonWorkerReady permanently false and Run permanently disabled. A functional probe is
+// the only signal that's actually reliable across engines:
+const workerServiceWorkerChannel = makeServiceWorkerChannel({scope: import.meta.env.BASE_URL});
+async function checkAndReportControllerStatus() : Promise<boolean> {
+    const controlled = await isServiceWorkerChannelResponsive(workerServiceWorkerChannel.baseUrl);
+    (self as unknown as DedicatedWorkerGlobalScope).postMessage({controllerStatus: controlled});
+    return controlled;
 }
 if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.addEventListener("controllerchange", reportControllerStatus);
+    navigator.serviceWorker.addEventListener("controllerchange", () => void checkAndReportControllerStatus());
 }
-reportControllerStatus();
+// The very first check can easily race the service worker's own install/activate/claim sequence,
+// especially for the worker created synchronously at page load -- so retry with a short backoff
+// for a while rather than only trying once and relying solely on a controllerchange event that,
+// per above, isn't a reliable signal to wait on in every engine:
+(async () => {
+    const deadline = Date.now() + 20000;
+    while (!(await checkAndReportControllerStatus()) && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+})();

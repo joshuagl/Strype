@@ -25,14 +25,20 @@ export async function serviceWorkerReadyAndInControl() : Promise<void> {
 // answering (e.g. Safari silently losing a backgrounded tab's service worker), in which case a
 // Pyodide run that depends on the channel (input(), cloud file I/O, output catch-up) would only
 // discover the problem ~5s in, via a ServiceWorkerError from deep inside the worker. Kept to a
-// short timeout so a genuinely dead channel is detected fast rather than stalling the Run click:
+// short timeout so a genuinely dead channel is detected fast rather than stalling the Run click.
+// Also callable from inside a dedicated Worker (see reportControllerStatus() in
+// python-execution.ts) -- `document` and `navigator.serviceWorker` aren't necessarily defined
+// there (Chromium doesn't expose navigator.serviceWorker to Workers at all: crbug.com/40364838),
+// so both are guarded rather than assumed:
 export async function isServiceWorkerChannelResponsive(channelBaseUrl: string, timeoutMs = 800) : Promise<boolean> {
     // Logged (temporarily, while we're chasing down a report of the Run button getting stuck on
     // "Stop" with nothing happening, even though the page stayed foregrounded/visible throughout)
     // so a repro can confirm whether this pre-flight check is the thing catching (or failing to
     // catch) a dead channel -- and whether document.visibilityState really was "visible" the whole
     // time, ruling backgrounding out directly rather than just by the user's recollection:
-    const logPrefix = `[SW channel check ${new Date().toISOString()}] visibilityState=${document.visibilityState} hasFocus=${document.hasFocus()} controller=${navigator.serviceWorker.controller != null}`;
+    const hasDocument = typeof document !== "undefined";
+    const hasController = ("serviceWorker" in navigator) && navigator.serviceWorker.controller != null;
+    const logPrefix = `[SW channel check ${new Date().toISOString()}] visibilityState=${hasDocument ? document.visibilityState : "n/a"} hasFocus=${hasDocument ? document.hasFocus() : "n/a"} controller=${hasController}`;
     try {
         // /version is answered by the sync-message package's own service-worker fetch listener
         // (not anything Strype implements) -- it responds to any request whose URL ends in
