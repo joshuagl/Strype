@@ -60,10 +60,17 @@ export async function isServiceWorkerChannelResponsive(channelBaseUrl: string, t
 
 // Logged (temporarily, see isServiceWorkerChannelResponsive() above) so we can see if the
 // controller is changing (e.g. being reclaimed after a termination) while the page is still
-// visible, which would confirm this isn't a backgrounding-related issue:
+// visible, which would confirm this isn't a backgrounding-related issue. This file is loadable
+// from inside a dedicated Worker (see isServiceWorkerChannelResponsive()'s own comment on that),
+// and unlike Chromium, WebKit does expose navigator.serviceWorker to Workers -- so `document`
+// must be guarded here the same way isServiceWorkerChannelResponsive() already guards it above,
+// or this throws a ReferenceError inside the worker the moment a controllerchange event fires
+// there (confirmed via a real CI failure on macOS/WebKit: tests/playwright/e2e/sound-wait-after-run.spec.ts,
+// https://github.com/k-pet-group/Strype/actions/runs/31181917214):
 if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
     navigator.serviceWorker.addEventListener("controllerchange", () => {
-        console.info(`[SW controllerchange ${new Date().toISOString()}] visibilityState=${document.visibilityState} hasFocus=${document.hasFocus()}`);
+        const hasDocument = typeof document !== "undefined";
+        console.info(`[SW controllerchange ${new Date().toISOString()}] visibilityState=${hasDocument ? document.visibilityState : "n/a"} hasFocus=${hasDocument ? document.hasFocus() : "n/a"}`);
     });
 }
 
