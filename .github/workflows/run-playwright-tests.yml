@@ -141,7 +141,7 @@ jobs:
       run: |
         brew install coreutils
         brew install --quiet jq
-        ISOLATED_SPECS="tests/playwright/e2e/console-execution.spec.ts,tests/playwright/e2e/storage-model.spec.ts"
+        ISOLATED_SPECS="tests/playwright/e2e/console-execution.spec.ts,tests/playwright/e2e/storage-model.spec.ts,tests/playwright/e2e/sound-wait-after-run.spec.ts"
         if [ "${{ matrix.browser }}" = "webkit" ] && [ "${{ matrix.webkitPart }}" = "single" ]; then
           # console-execution.spec.ts and storage-model.spec.ts have both shown CI-only
           # stop-slowness/flakiness on macOS+WebKit, suspected to be main-thread starvation
@@ -149,7 +149,9 @@ jobs:
           # WEBKIT_STOP_INVESTIGATION.md at commit e5c91b29). Run them alone,
           # single-worker, in their own job to test that directly -- separate from (and
           # concurrent with) the rest of the webkit suite below, rather than running both
-          # phases serially in one job.
+          # phases serially in one job. sound-wait-after-run.spec.ts was added here too: it
+          # waits on real-time sound playback finishing on its own, which is exactly the kind
+          # of timing assertion multi-worker main-thread starvation would make flaky.
           RUN_CMD="SPEC=$ISOLATED_SPECS npx playwright test --project=webkit --workers=1"
         elif [ "${{ matrix.browser }}" = "webkit" ] && [ "${{ matrix.webkitPart }}" = "multi" ]; then
           RUN_CMD="EXCLUDE_SPEC=$ISOLATED_SPECS npx playwright test --project=webkit"
