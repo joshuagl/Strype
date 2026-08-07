@@ -131,8 +131,12 @@ function removeFilesPlugin(isStandardPython) {
 function writeVersionFilePlugin(gitHash) {
     return {
         name: "write-version-file",
-        closeBundle() {
-            fs.writeFileSync(path.resolve(__dirname, "dist/version.json"), JSON.stringify({gitHash}));
+        // Use writeBundle (not closeBundle) so we get the actual resolved output dir: this config
+        // is also loaded, via vite's build() API, by scripts/build-service-worker.mjs to compile a
+        // single worker file into a temp dir ahead of the real app build -- writing to a
+        // hardcoded "dist/" there fails because the real dist/ doesn't exist yet at that point:
+        writeBundle(options) {
+            fs.writeFileSync(path.resolve(options.dir, "version.json"), JSON.stringify({gitHash}));
         },
     };
 }
