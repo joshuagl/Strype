@@ -1,5 +1,11 @@
 name: Run lint and type check
-on: [push,pull_request]
+on:
+  push:
+    # A "no-ci-*" branch (e.g. for a trivial README-only change) skips this trigger entirely --
+    # no run is even created, unlike the pull_request case below where a head_ref check on each
+    # job is the best we can do (there's no equivalent head-branch trigger filter for PRs):
+    branches-ignore: ["no-ci-*"]
+  pull_request:
 # A push to a branch that already has an open PR fires both a push event and a pull_request
 # "synchronize" event for the same commit -- without this, that's two full runs of everything
 # below. Group push and pull_request runs for the same branch together (falling back to ref_name
@@ -11,6 +17,9 @@ concurrency:
   cancel-in-progress: true
 jobs:
   Lint:
+    # See the branches-ignore comment above -- this is the pull_request-side equivalent (head_ref
+    # is only set for pull_request events; a push that reaches this point already isn't excluded):
+    if: ${{ !startsWith(github.head_ref, 'no-ci-') }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -23,6 +32,7 @@ jobs:
       - name: NPM Linter
         run: npm run lint:check        
   TypeCheck:
+    if: ${{ !startsWith(github.head_ref, 'no-ci-') }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -35,6 +45,7 @@ jobs:
       - name: NPM Type check
         run: npm run type:check        
   Build:
+    if: ${{ !startsWith(github.head_ref, 'no-ci-') }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
