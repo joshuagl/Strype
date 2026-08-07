@@ -126,6 +126,9 @@ export default defineComponent({
                     this.appStore.applyStateUndoRedoChanges(true);
                     this.appStore.currentMessage = MessageDefinitions.NoMessage;
                     break;
+                case MessageDefinedActions.reload:
+                    window.location.reload();
+                    break;
                 case MessageDefinedActions.load:
                     if (this.appStore.foundRecentState != null) {
                         // Set both these items going in parallel (first is quick, second is longer and we don't need to wait for it):

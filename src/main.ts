@@ -10,6 +10,7 @@ import {getAppLangSelectId, getEditorID, getEditorMenuUID, getFrameBodyUID, getF
 import "@imengyu/vue3-context-menu/lib/vue3-context-menu.css";
 import ContextMenu from "@imengyu/vue3-context-menu";
 import { initialiseAnalytics } from "./helpers/initialiseAnalytics";
+import { startVersionCheck } from "./helpers/versionCheck";
 import { openIndexedDBConnection, tidyUpDatabaseState } from "@/store/store-db-storage";
 import { getEditorTabId } from "@/store/store";
 import { showIndexDBError } from "@/helpers/storeMethods";
@@ -109,6 +110,7 @@ app.use(i18n);
 // Store package (Pinia is the default store management library for Vue 3)
 app.use(createPinia());
 initialiseAnalytics();
+startVersionCheck();
 // Create a directive "blur" to replace the package v-blur, only compatible with Vue 2
 const applyBlur = (el: HTMLElement, isBlurred: Boolean) => {
     el.style.filter = (isBlurred) ? "blur(1.5px)" : "none";

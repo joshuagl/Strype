@@ -926,6 +926,7 @@ export const MessageDefinedActions = {
     closeBanner: "close",
     undo: "undo",
     load: "load",
+    reload: "reload",
 };
 
 export enum imagePaths {
@@ -957,6 +958,7 @@ export const MessageTypes = {
     invalidPythonParsePaste: "invalidPythonParsePaste",
     errorAccessingIndexedDB: "errorAccessingIndexedDB",
     foundRecentUnsavedState: "foundRecentUnsavedState",
+    newVersionAvailable: "newVersionAvailable",
 };
 
 //empty message
@@ -1104,6 +1106,17 @@ const FoundRecentUnsavedState: MessageDefinition = {
     path: imagePaths.empty,
 };
 
+// Shown when startVersionCheck() (versionCheck.ts) detects that the deployed build has moved on
+// since this page loaded -- see its comment for why that can happen even in a single session.
+// No timeout: unlike most banners this isn't reacting to something the user just did, so there's
+// no natural moment it stops being relevant -- it should stay until they act or dismiss it.
+const NewVersionAvailable: MessageDefinition = {
+    ...NoMessage,
+    type: MessageTypes.newVersionAvailable,
+    message: "messageBannerMessage.newVersionAvailable",
+    buttons: [{ label: "buttonLabel.reload", action: MessageDefinedActions.reload }],
+};
+
 export const MessageDefinitions = {
     NoMessage,
     UploadSuccessMicrobit,
@@ -1121,6 +1134,7 @@ export const MessageDefinitions = {
     InvalidPythonParsePaste,
     ErrorAccessingIndexedDB,
     FoundRecentUnsavedState,
+    NewVersionAvailable,
 };
 
 //WebUSB listener
