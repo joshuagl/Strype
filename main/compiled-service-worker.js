@@ -214,9 +214,11 @@ var import_dist = (/* @__PURE__ */ __commonJSMin(((exports, module) => {
 	}));
 })))();
 self.addEventListener("install", () => {
+	console.info(`[SW ${(/* @__PURE__ */ new Date()).toISOString()}] install`);
 	self.skipWaiting();
 });
 self.addEventListener("activate", (event) => {
+	console.info(`[SW ${(/* @__PURE__ */ new Date()).toISOString()}] activate`);
 	event.waitUntil(self.clients.claim());
 });
 self.addEventListener("message", (event) => {
