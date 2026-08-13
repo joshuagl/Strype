@@ -1,6 +1,8 @@
 <template>
     <div :class="{'frame-cmd-container': true, disabled: isPythonExecuting || appStore.isDraggingFrame}" @click="onClick">
-        <button :class="{'frame-cmd-btn': true, 'frame-cmd-btn-large': isLargerShorcutSymbol, 'frame-cmd-greyed': greyedOut}" :disabled="isPythonExecuting || appStore.isDraggingFrame">{{ (!isSVGIconSymbol) ? symbol : '' }}
+        <button
+            :aria-label="description"
+            :class="{'frame-cmd-btn': true, 'frame-cmd-btn-large': isLargerShorcutSymbol, 'frame-cmd-greyed': greyedOut}" :disabled="isPythonExecuting || appStore.isDraggingFrame">{{ (!isSVGIconSymbol) ? symbol : '' }}
             <SVGIcon v-if="isSVGIconSymbol" :name="symbol" :customClass="{'add-frame-command-symbol-svg-icon': true, disabled: isPythonExecuting || appStore.isDraggingFrame}" />
         </button>
         <span>{{ description }}</span>
