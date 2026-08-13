@@ -1,7 +1,7 @@
 <template>
     <!-- With the new package for Bootstrap (for Vue 3), BApp must wrap the application content -->
     <BApp>
-        <div @mousedown.capture="onAppMouseDownCapture">
+        <div @mousedown.capture="onAppMouseDownCapture" role="application">
             <div v-if="showAppProgress || setAppNotOnTop" :class="{'app-overlay-pane': true, 'app-overlay-pane-absolute': showAppProgress, 'app-progress-pane': showAppProgress}" @contextmenu="handleOverlayRightClick">
                 <div v-if="showAppProgress" class="app-progress-container">
                     <div class="progress">
@@ -51,7 +51,7 @@
                                         class="noselect no-print col flex-grow-0"
                                     />
                                     <div class="col">
-                                        <div 
+                                        <div
                                             :id="editorUID" 
                                             :class="{'editor-code-div noselect print-full-height':true, ...layoutClassesForStandardVersion}"
                                             @mousedown="handleWholeEditorMouseDown"
