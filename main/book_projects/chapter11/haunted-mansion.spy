@@ -38,7 +38,7 @@ def show_intro ( ) :
     '''Display an opening/welcome text.'''
     print("        ====  HAUNTED MANSION  ====") 
     print() 
-    print("Your wake up. It is getting dark. You cannot remember how you got here.") 
+    print("You wake up. It is getting dark. You cannot remember how you got here.") 
     print("Type 'help' if you need help.") 
     print() 
     show_room_description(current_room) 
