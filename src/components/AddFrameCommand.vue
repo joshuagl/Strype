@@ -1,8 +1,7 @@
 <template>
     <div :class="{'frame-cmd-container': true, disabled: isPythonExecuting || appStore.isDraggingFrame}" @click="onClick">
         <button
-            :aria-label="description"
-            :class="{'frame-cmd-btn': true, 'frame-cmd-btn-large': isLargerShorcutSymbol, 'frame-cmd-greyed': greyedOut}" :disabled="isPythonExecuting || appStore.isDraggingFrame">{{ (!isSVGIconSymbol) ? symbol : '' }}
+            :aria-label="accessibleLabel" :class="{'frame-cmd-btn': true, 'frame-cmd-btn-large': isLargerShorcutSymbol, 'frame-cmd-greyed': greyedOut}" :disabled="isPythonExecuting || appStore.isDraggingFrame">{{ (!isSVGIconSymbol) ? symbol : '' }}
             <SVGIcon v-if="isSVGIconSymbol" :name="symbol" :customClass="{'add-frame-command-symbol-svg-icon': true, disabled: isPythonExecuting || appStore.isDraggingFrame}" />
         </button>
         <span>{{ description }}</span>
@@ -17,7 +16,7 @@ import { defineComponent } from "vue";
 import { useStore } from "@/store/store";
 import { mapStores } from "pinia";
 import { findAddCommandFrameType } from "@/helpers/editor";
-import { PythonExecRunningState } from "@/types/types";
+import {AllFrameTypesIdentifier, PythonExecRunningState} from "@/types/types";
 import SVGIcon from "@/components/SVGIcon.vue";
 
 //////////////////////
@@ -49,6 +48,34 @@ export default defineComponent({
 
         isPythonExecuting(): boolean {
             return (useStore().pythonExecRunningState ?? PythonExecRunningState.NotRunning) != PythonExecRunningState.NotRunning;
+        },
+
+        accessibleLabel(): string {
+            // TODO(JGL): this should likely be localisable?
+            let shortcut = this.shortcut;
+            let description = this.description;
+
+            // Comment and blank line shortcuts are not meaningfully when narrated by a
+            // screen reader, so we override them with something more recognisable
+            // for the auditory presentation.
+            // TODO(JGL): centralise this mapping to "narratable" strings _somewhere_...
+            switch (this.type) {
+            case AllFrameTypesIdentifier.varassign:
+                description = "assignment";
+                break;
+            case AllFrameTypesIdentifier.comment:
+                // i18n.global.t("frame.comment_desc"),
+                shortcut = "hash";
+                break;
+            case AllFrameTypesIdentifier.blank:
+                // TODO: may need i18n.global.t() here too?
+                shortcut = "enter";
+                break;
+            default:
+                break;
+            }
+
+            return `${description} ${shortcut}`;
         },
     },
 
