@@ -113,6 +113,10 @@
                 <span style="white-space:pre-wrap" v-html="$t('appMessage.newProjectConfirmation')"></span>
             </ModalDlg>
         </div>
+        <!-- for messages which are not time critical -->
+        <div id="aui-lazy-notifications" class="aui-notifications" aria-live="polite" aria-atomic="true" aria-relevant="all"></div>
+        <!-- for time critical messages -->
+        <div id="aui-timely-notifications" class="aui-notifications" aria-live="assertive" aria-atomic="true" aria-relevant="all"></div>
     </BApp>
 </template>
 
@@ -2291,5 +2295,16 @@ body.#{$strype-classname-dragging-frame} {
 
 .strype-split-theme .splitpanes--horizontal>.splitpanes__splitter:after {
 	margin-top: 1px
+}
+
+.aui-notifications {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
 }
 </style>
