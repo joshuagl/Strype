@@ -26,6 +26,7 @@
             autocapitalize="off"
             spellcheck="false"
             inputmode="none"
+            :aria-label="accessibleLabel"
             @input="clearFocusInputContent"
         />
         <ContextMenu
@@ -68,6 +69,8 @@ import { getFrameDefType, SlotType, MediaDataAndDim} from "@/types/types";
 import { getFrameLabelSlotsStructureUID, getLabelSlotUID } from "@/helpers/editor";
 import { preparePasteMediaData } from "@/helpers/media";
 import { getParentOrJointParent } from "@/helpers/storeMethods";
+import Parser from "@/parser/parser";
+import {humanReadableFrameType} from "@/helpers/auditoryUI";
 // #v-endif
 
 //////////////////////
@@ -187,6 +190,10 @@ export default defineComponent({
         
         isFocusedForPaste(): boolean {
             return !this.isPythonExecuting && !this.appStore.isModalDlgShown && !this.isEditing && this.caretVisibility !== CaretPosition.none && (this.caretVisibility === this.caretAssignedPosition);
+        },
+
+        accessibleLabel(): string {
+            return this.computeAccessibleLabel();
         },
     },
 
@@ -396,6 +403,56 @@ export default defineComponent({
                     setTimeout(() => document.getElementById(getAddFrameCmdElementUID(addFrameCmdDef[0].type.type))?.click(), 250);
                 }});
             });
+        },
+
+        computeAccessibleLabel(): string {
+            // TODO: we should have a shared parser, rather than creating one per CaretContainer
+            // Our long-term solution may be modelled after src/autocompletion to provide a label
+            // generator? :thinking:
+            const parser = new Parser(false, "py", true);
+            const parentFrame = this.appStore.frameObjects[this.appStore.frameObjects[this.frameId].parentId];
+
+            // below a frame (not the top caret position in a container)
+            const frameType = humanReadableFrameType(this.appStore.frameObjects[this.frameId].frameType.type);
+            const belowFrame = this.caretAssignedPosition == CaretPosition.below;
+            if (!belowFrame) {
+                return "Top of " + frameType;
+            }
+
+            // Current frame is always wanted
+            // FIXME(JGL): if this is a comment frame, the parsed code is merely `pass`
+            const parsedCurrentFrame = parser.parse({
+                startAtFrameId: this.frameId,
+                stopAt: {frameId: this.frameId,
+                    includeThisFrame: true},
+                excludeComments: true});
+
+            // Class or function or loop, we'll want to narrate "context"
+            let provideContext;
+            switch (parentFrame.frameType.type) {
+            case AllFrameTypesIdentifier.funcdef:
+            case AllFrameTypesIdentifier.classdef:
+            case AllFrameTypesIdentifier.for:
+            case AllFrameTypesIdentifier.if:
+            case AllFrameTypesIdentifier.elif:
+            case AllFrameTypesIdentifier.else:
+            case AllFrameTypesIdentifier.try:
+            case AllFrameTypesIdentifier.except:
+            case AllFrameTypesIdentifier.finally:
+            case AllFrameTypesIdentifier.match:
+            case AllFrameTypesIdentifier.while:
+                provideContext = true;
+                break;
+            default:
+                provideContext = false;
+            }
+
+            let returnedLabel = frameType + " with code " + parsedCurrentFrame;
+            if (provideContext) {
+                returnedLabel += "in " + humanReadableFrameType(parentFrame.frameType.type);
+            }
+
+            return returnedLabel;
         },
     },
 });
