@@ -1,0 +1,11 @@
+- file: fireworks.spy
+  image: fireworks.png
+  description: Create a firework show using function calls
+
+- file: fireworks-finished.spy
+  image: fireworks.png
+  description: An example of some fireworks
+
+- file: drum.spy
+  image: drum.png
+  description: Hit the drum, make some noise

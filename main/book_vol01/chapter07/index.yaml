@@ -1,0 +1,12 @@
+- file: yellow-fish-v6.spy
+  image: yellow-fish.png
+  description: The penultimate version of the yellow-fish project
+
+- file: platform-v1.spy
+  name: platform
+  image: platform.png
+  description: A starter project for a platform jumper game
+
+- file: platform-v2.spy
+  image: platform.png
+  description: Similar to the one above, but with animated walking

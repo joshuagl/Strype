@@ -1,0 +1,11 @@
+- file: yellow-fish-v2.spy
+  image: yellow-fish.png
+  description: The intermediate version of the yellow-fish project
+
+- file: yellow-fish-v3.spy
+  image: yellow-fish.png
+  description: The last version of the yellow-fish project in this chapter
+
+- file: pong-classic.spy
+  image: pong-icon.png
+  description: A starter for the classic game 'Pong'

@@ -1,0 +1,9 @@
+- file: yellow-fish-v5.spy
+  image: yellow-fish.png
+  description: The last version of the yellow-fish project in this chapter
+
+- file: breakout.spy
+  image: breakout.png
+  description: The start of the classic 'Breakout' game
+
+- asset: shark.png

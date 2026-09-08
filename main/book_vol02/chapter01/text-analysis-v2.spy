@@ -1,0 +1,31 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":36.2}
+#(=> peaCommandsSplitterPane2Size:{"tabsCollapsed":60.25}
+'''text-analysis, Version 0.2
+This project implements some simple text analysis. In this version, we print the first basic information.
+
+This project is part of the book "Creative Python Programming with Strype".
+Authors: Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+#(=> Section:Definitions
+#helper functions
+#(=> FrameState:FoldToHeader
+def read_file (filename ) :
+    '''Read a file from disk and return the content of the file as a single string.
+    
+    Parameter:   
+       filename : str
+           The name of the file to be read. The file must exist in the same 
+           folder in a cloud file system where this program is stored.
+    Returns:
+       str: The content of this file as a single string.'''
+    with open(filename,"r")  as file  :
+        content  = file.read() 
+    return content 
+#(=> Section:Main
+text  = "Wolfgang Amadeus Mozart" 
+print(text) 
+print(f"Length: {len(text)}.") 
+for char  in text  :
+    print(char) 
+#(=> Section:End

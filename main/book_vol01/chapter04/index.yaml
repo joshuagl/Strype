@@ -1,0 +1,15 @@
+- file: knock-knock.spy
+  image: knock-knock.png
+  description: The crab tells the lobster a joke
+
+- file: fatcat.spy
+  image: fatcat.png
+  description: The starting version of the fatcat project
+
+- file: fatcat-v2.spy
+  image: fatcat.png
+  description: The last version of the fatcat project
+
+- file: space.spy
+  image: space.png
+  description: A demo of four-directional movement

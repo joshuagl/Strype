@@ -93,11 +93,11 @@ def get_wall_force (f ) :
     if f.get_x() < wall_dist - 400  :
         total  = add(total,(dist_to_force * (-350 - f.get_x()),0)) 
     if f.get_x() > 400 - wall_dist  :
-        total  = add(total,( - dist_to_force * (f.get_x() - 350),0)) 
+        total  = add(total,(-dist_to_force * (f.get_x() - 350),0)) 
     if f.get_y() < wall_dist - 300  :
         total  = add(total,(0,dist_to_force * (-250 - f.get_y()))) 
     if f.get_y() > 300 - wall_dist  :
-        total  = add(total,(0, - dist_to_force * (f.get_y() - 250))) 
+        total  = add(total,(0,-dist_to_force * (f.get_y() - 250))) 
     return total 
 #(=> FrameState:FoldToHeader
 def get_centre_of_mass (f ) :

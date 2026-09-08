@@ -1,0 +1,7 @@
+- file: temperature.spy
+  image: thermometer.png
+  description: The starting version of the temperature analysis project
+
+- file: temperature-v2.spy
+  image: thermometer.png
+  description: The second version of the temperature analysis project

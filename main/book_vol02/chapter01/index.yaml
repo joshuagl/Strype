@@ -1,0 +1,11 @@
+- file: text-analysis.spy
+  image: book.png
+  description: The starting version of the text analysis project
+
+- file: text-analysis-v2.spy
+  image: book.png
+  description: The second version of the text analysis project
+
+- file: text-analysis-v3.spy
+  image: book.png
+  description: The third version of the text analysis project

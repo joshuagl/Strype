@@ -1,0 +1,13 @@
+- file: yellow-fish-v7.spy
+  image: yellow-fish.png
+  description: The final version of the yellow-fish project
+
+- file: smoke.spy
+  image: smoke.png
+  description: A visual smoke effect 
+
+- asset: game-over.png
+- asset: you-win.png
+- asset: au.wav
+- asset: slurp.wav
+- asset: fanfare.wav

@@ -1,0 +1,51 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":36.2}
+#(=> peaCommandsSplitterPane2Size:{"tabsCollapsed":60.25}
+'''temperature, Version 0.2
+
+A program to read and show temperature data.
+
+This project is part of the book "Creative Python Programming with Strype".
+Copyright ©: Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+#(=> Section:Definitions
+#(=> FrameState:FoldToHeader;Frozen
+def read_file (filename ) :
+    '''Read a text file from disk and return the content of the file as a list of strings, with each line an item in the list.
+    
+    Parameter:   
+       filename : str
+           The name of the file to be read. The file must exist in the same 
+           folder in a cloud file system where this program is stored.
+    Returns:
+       list(str): A list of strings with the lines from the file'''
+    with open(filename,"r")  as file  :
+        all  = file.read() 
+    lines  = all.split() 
+    return lines 
+#(=> Section:Main
+data  = read_file("/data/london-temperature-2025.txt") 
+temp  = [] 
+for elem  in data  :
+    temp.append(float(elem)) 
+
+print("Hottest day of the year:",max(temp),"degrees.") 
+print("Coldest day of the year:",min(temp),"degrees.") 
+
+max_index  = temp.index(max(temp)) 
+min_index  = temp.index(min(temp)) 
+
+print("The hottest day was day number",max_index) 
+print("The coldest day was day number",min_index) 
+print() 
+
+jan  = temp[0:31] 
+print("Warmest day in January:",max(jan),"degrees.") 
+feb  = temp[31:31 + 28] 
+print("Warmest day in February:",max(feb),"degrees.") 
+print() 
+
+sorted_temp  = temp.copy() 
+sorted_temp.sort() 
+print("10 coldest days:",sorted_temp[:10]) 
+#(=> Section:End

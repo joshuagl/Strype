@@ -1,0 +1,9 @@
+- file: yellow-fish-v4.spy
+  image: yellow-fish.png
+  description: The next version of the yellow-fish project
+
+- file: particles.spy
+  image: particles.png
+  description: A demo of a visual effect (flying particle sparks)
+
+- asset: shrimp.png

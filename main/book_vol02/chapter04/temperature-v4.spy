@@ -1,0 +1,88 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":36.2}
+#(=> peaCommandsSplitterPane2Size:{"tabsCollapsed":60.25}
+'''temperature, Version 0.4
+
+A program to read and show temperature data.
+
+This project is part of the book "Creative Python Programming with Strype".
+Copyright © Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+#(=> Section:Definitions
+#(=> FrameState:FoldToHeader;Frozen
+def read_file (filename ) :
+    '''Read a text file from disk and return the content of the file as a list of strings, with each line an item in the list.
+    
+    Parameter:   
+       filename : str
+           The name of the file to be read. The file must exist in the same 
+           folder in a cloud file system where this program is stored.
+    Returns:
+       list(str): A list of strings with the lines from the file'''
+    with open(filename,"r")  as file  :
+        all  = file.read() 
+    lines  = all.split() 
+    return lines 
+#(=> FrameState:FoldToHeader
+def my_sum (list ) :
+    '''Return the sum of the elements in \'list\''''
+    total  = 0 
+    for elem  in list  :
+        total  = total + elem 
+    return total 
+#(=> FrameState:FoldToHeader
+def my_max (list ) :
+    '''Return the maximum value from \'list\''''
+    max  = list[0] 
+    for elem  in list  :
+        if elem > max  :
+            max  = elem 
+    return max 
+#(=> FrameState:FoldToHeader
+def biggest_change (list ) :
+    '''Return the value and day number of the biggest change in \'list\''''
+    max_diff  = 0 
+    max_diff_index  = 0 
+    for i  in range(1,len(list))  :
+        diff  = abs(list[i] - list[i - 1]) 
+        if diff > max_diff  :
+            max_diff  = diff 
+            max_diff_index  = i 
+    return max_diff,max_diff_index 
+def get_month_data (month ) :
+    '''Get data for month. Month must be in [1..12]'''
+    if month in range(1,13)  :
+        start  = start_day[month - 1] 
+        end  = start_day[month] 
+        return temp[start:end] 
+    else :
+        print("Error: Invalid value used for month") 
+        return [] 
+#(=> Section:Main
+data  = read_file("/data/london-temperature-2025.txt") 
+temp  = [] 
+for elem  in data  :
+    temp.append(float(elem)) 
+
+print("Average temperature for the year:",round(sum(temp) / len(temp),1)) 
+
+print("My sum:",my_sum(temp)) 
+print("Sum:",sum(temp)) 
+
+print("My max:",my_max(temp)) 
+print("Max",max(temp)) 
+
+print("Biggest change in one day:",biggest_change(temp)) 
+print() 
+
+month_lengths  = [31,28,31,30,31,30,31,31,30,31,30,31] 
+start_day  = [0] 
+for i  in range(12)  :
+    start_day.append(start_day[i] + month_lengths[i]) 
+
+print("December temperatures:",get_month_data(12)) 
+print("Warmest temperature in December:",max(get_month_data(12))) 
+print() 
+
+print(get_month_data(14)) 
+#(=> Section:End

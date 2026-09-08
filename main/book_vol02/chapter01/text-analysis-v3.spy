@@ -1,0 +1,50 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":36.2}
+#(=> peaCommandsSplitterPane2Size:{"tabsCollapsed":60.25}
+'''text-analysis, Version 0.3
+This project implements some simple text analysis. In this version, we count characters.
+
+This project is part of the book "Creative Python Programming with Strype".
+Authors: Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+from string import punctuation 
+#(=> Section:Definitions
+#helper functions
+#(=> FrameState:FoldToHeader
+def read_file (filename ) :
+    '''Read a file from disk and return the content of the file as a single string.
+    
+    Parameter:   
+       filename : str
+           The name of the file to be read. The file must exist in the same 
+           folder in a cloud file system where this program is stored.
+    Returns:
+       str: The content of this file as a single string.'''
+    with open(filename,"r")  as file  :
+        content  = file.read() 
+    return content 
+def analyse_text (text ) :
+    '''Receive a string as a parameter and print out some statistics about it.'''
+    print(f'"{text}"') 
+    print(f"Length: {len(text)} characters") 
+    
+    #count non-space characters
+    non_space  = 0 
+    for char  in text  :
+        if char != " "  :
+            non_space  = non_space + 1 
+    print(f"Characters without spaces: {non_space}") 
+    
+    #count punctuation characters
+    punct_count  = 0 
+    for char  in text  :
+        if char in punctuation  :
+            punct_count  = punct_count + 1 
+    print(f"Punctuation characters: {punct_count}") 
+    
+    #print empty line
+    print() 
+#(=> Section:Main
+analyse_text("It was a bright cold day in April, and the clocks were striking thirteen.") 
+analyse_text("The story so far: in the beginning, the universe was created. This has made a lot of people very angry and been widely regarded as a bad move.") 
+#(=> Section:End

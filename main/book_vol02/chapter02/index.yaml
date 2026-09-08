@@ -1,0 +1,7 @@
+- file: text-analysis-v4.spy
+  image: book.png
+  description: The fourth version of the text analysis project
+
+- file: text-analysis-v5.spy
+  image: book.png
+  description: The fifth version of the text analysis project
