@@ -56,7 +56,7 @@
 import { defineComponent, PropType } from "vue";
 import { useStore } from "@/store/store";
 import Caret from"@/components/Caret.vue";
-import {AllFrameTypesIdentifier, CaretPosition, Position, PythonExecRunningState, FrameContextMenuActionName, CollapsedState, StrypeContextMenuItem, CoordPosition} from "@/types/types";
+import { AllFrameTypesIdentifier, CaretPosition, Position, PythonExecRunningState, FrameContextMenuActionName, CollapsedState, StrypeContextMenuItem, CoordPosition } from "@/types/types";
 import { getCaretUID, setContextMenuEventClientXY, getAddFrameCmdElementUID, CustomEventTypes, getCaretContainerUID, getCaretContainerFocusInputUID } from "@/helpers/editor";
 import { mapStores } from "pinia";
 import { cloneDeep } from "lodash";
@@ -69,8 +69,7 @@ import { getFrameDefType, SlotType, MediaDataAndDim} from "@/types/types";
 import { getFrameLabelSlotsStructureUID, getLabelSlotUID } from "@/helpers/editor";
 import { preparePasteMediaData } from "@/helpers/media";
 import { getParentOrJointParent } from "@/helpers/storeMethods";
-import Parser from "@/parser/parser";
-import {humanReadableFrameType} from "@/helpers/auditoryUI";
+import { frameToAuditoryPresentation } from "@/helpers/auditoryUI";
 // #v-endif
 
 //////////////////////
@@ -406,53 +405,50 @@ export default defineComponent({
         },
 
         computeAccessibleLabel(): string {
-            // TODO: we should have a shared parser, rather than creating one per CaretContainer
-            // Our long-term solution may be modelled after src/autocompletion to provide a label
-            // generator? :thinking:
-            const parser = new Parser(false, "py", true);
-            const parentFrame = this.appStore.frameObjects[this.appStore.frameObjects[this.frameId].parentId];
-
-            // below a frame (not the top caret position in a container)
-            const frameType = humanReadableFrameType(this.appStore.frameObjects[this.frameId].frameType.type);
-            const belowFrame = this.caretAssignedPosition == CaretPosition.below;
-            if (!belowFrame) {
-                return "Top of " + frameType;
+            // We want to work on the frame below
+            const children = this.appStore.frameObjects[this.frameId].childrenIds;
+            const parent = this.appStore.frameObjects[this.frameId].parentId;
+            let nextFrameId = -1;
+            if (children.length > 0) {
+                // Frame below is immediate child
+                nextFrameId = children?.shift() ?? -1; // TODO: will this ever be -1 ?
             }
-
-            // Current frame is always wanted
-            // FIXME(JGL): if this is a comment frame, the parsed code is merely `pass`
-            const parsedCurrentFrame = parser.parse({
-                startAtFrameId: this.frameId,
-                stopAt: {frameId: this.frameId,
-                    includeThisFrame: true},
-                excludeComments: true});
-
-            // Class or function or loop, we'll want to narrate "context"
-            let provideContext;
-            switch (parentFrame.frameType.type) {
-            case AllFrameTypesIdentifier.funcdef:
-            case AllFrameTypesIdentifier.classdef:
-            case AllFrameTypesIdentifier.for:
-            case AllFrameTypesIdentifier.if:
-            case AllFrameTypesIdentifier.elif:
-            case AllFrameTypesIdentifier.else:
-            case AllFrameTypesIdentifier.try:
-            case AllFrameTypesIdentifier.except:
-            case AllFrameTypesIdentifier.finally:
-            case AllFrameTypesIdentifier.match:
-            case AllFrameTypesIdentifier.while:
-                provideContext = true;
-                break;
-            default:
-                provideContext = false;
+            else if (parent) {
+                // Frame below is adjacent frame
+                let siblings = this.appStore.frameObjects[parent].childrenIds;
+                let sentry = false;
+                for (let sibling of siblings) {
+                    if (sentry === true) {
+                        nextFrameId = sibling;
+                    }
+                    if (sibling == this.frameId) {
+                        sentry = true;
+                    }
+                }
             }
-
-            let returnedLabel = frameType + " with code " + parsedCurrentFrame;
-            if (provideContext) {
-                returnedLabel += "in " + humanReadableFrameType(parentFrame.frameType.type);
+            
+            if (nextFrameId) {
+                console.log("Next frame may be " + nextFrameId);
             }
+            else {
+                // FIXME(JGL): does this mean we're at the end of a container?
+                console.log("Couldn't determine a next frameId");
+            }
+            
+            // FIXME(JGL): this should likely be the frame _below_ the frame cursor, not the one above
+            // // const frameRawType = this.appStore.frameObjects[this.frameId].frameType.type;
+            // const frameRawType = this.appStore.frameObjects[nextFrameId].frameType.type;
+            // const frameType = humanReadableFrameType(frameRawType);
+            // const belowFrame = this.caretAssignedPosition == CaretPosition.below;
+            //
+            // if (!belowFrame && frameRawType in ContainerTypesIdentifiers) {
+            //     return "Top of " + frameType;
+            // }
 
-            return returnedLabel;
+            // return frameToAuditoryPresentation(this.appStore.frameObjects[this.frameId]);
+            
+            // TODO(JGL): this is ugly code to make sure nextFrameId is a number. Can we `or -1`?
+            return frameToAuditoryPresentation(this.appStore.frameObjects[nextFrameId]);
         },
     },
 });
