@@ -80,3 +80,12 @@ export function frameToAuditoryPresentation(frame: FrameObject): string {
     }
     return returnedLabel;
 }
+
+export function auditoryEvent(event: string): void {
+    const messageArea = document.getElementById("aui-timely-notifications");
+    if (messageArea) {
+        // TODO: we should also announce what is the active cursor type and where the focus is
+        messageArea.textContent = "";
+        setTimeout(() => (messageArea.textContent = event), 50);
+    }
+}

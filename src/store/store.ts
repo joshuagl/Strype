@@ -38,7 +38,7 @@ export type { AnalyticsEvent, AnalyticsFlushReason } from "@/store/analytics";
 import { waitForPanesSettled } from "@/helpers/editor";
 // #v-ifdef STRYPE_PLATFORM == VITE_STANDARD_PYTHON_MODE
 import { actOnGraphicsImport } from "@/helpers/editor";
-import {humanReadableFrameType} from "@/helpers/auditoryUI";
+import {auditoryEvent, humanReadableFrameType} from "@/helpers/auditoryUI";
 // #v-endif
 
 export function getEditorTabId() : string {
@@ -1897,13 +1897,7 @@ export const useStore = defineStore("app", {
             this.isFrameCommandsPaneActive = false;
 
             // Announce frame insertion (ARIA Live)
-            const messageArea = document.getElementById("aui-timely-notifications");
-            if (messageArea) {
-                let message = humanReadableFrameType(frame.type) + " inserted";
-                // TODO: we should also announce what is the active cursor type and where the focus is
-                messageArea.textContent = "";
-                setTimeout(() => (messageArea.textContent = message), 50);
-            }
+            auditoryEvent(humanReadableFrameType(frame.type) + " inserted");
 
             const stateBeforeChanges = cloneDeep(this.$state);
             const currentFrame = this.frameObjects[this.currentFrame.id];
@@ -2325,8 +2319,6 @@ export const useStore = defineStore("app", {
         deleteOuterFrames(frameId: number){
             // Delete the outer frame(s), the frameId argument only makes sense for deletion without multi-selection
             // We delete outer frame(s) by getting inside each body, and performing a standard "backspace" delete
-
-            // TODO(JGL): announce frame deletion (ARIA Live)
            
             const stateBeforeChanges = cloneDeep(this.$state);
 
