@@ -10,6 +10,7 @@ import scssVars from "@/assets/style/_export.module.scss";
 import { $enum } from "ts-enum-util";
 import { getUserDefinedSignature } from "@/autocompletion/acManager";
 import { calculatePrecedenceTiers, UNARY_PREFIX_OPERATORS } from "@/helpers/operatorPrecedence";
+import {auditoryEvent, humanReadableFrameType} from "@/helpers/auditoryUI";
 
 export const retrieveSlotFromSlotInfos = (slotCoreInfos: SlotCoreInfos): FieldSlot => {
     // Retrieve the slot from its id (used for UI), check generateFlatSlotBases() for IDs explanation    
@@ -411,6 +412,9 @@ export const removeFrameInFrameList = (frameId: number): void => {
     // When removing a frame in the list, we remove all its sub levels,
     // then update its parent and then delete the frame itself
     const frameObject = useStore().frameObjects[frameId];
+    
+    let auiNotification = "Removing " + humanReadableFrameType(frameObject.frameType.type) + " and any children";
+    auditoryEvent(auiNotification);
 
     //we need a copy of the childrenIds are we are modifying them in the foreach
     const childrenIds = [...frameObject.childrenIds];
