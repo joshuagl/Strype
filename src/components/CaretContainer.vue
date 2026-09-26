@@ -405,12 +405,14 @@ export default defineComponent({
         },
 
         computeAccessibleLabel(): string {
-            const frameType = humanReadableFrameType(this.appStore.frameObjects[this.frameId].frameType.type);
+            const caretFrameObject = this.appStore.frameObjects[this.frameId];
+            const frameType = humanReadableFrameType(caretFrameObject.frameType.type);
             const belowFrame = this.caretAssignedPosition == CaretPosition.below;
             if (!belowFrame) {
-                return "Top of " + frameType;
+                let frameDesc = frameToAuditoryPresentation(caretFrameObject);
+                return "Top of " + frameType + " " + frameDesc;
             }
-            return frameToAuditoryPresentation(this.appStore.frameObjects[this.frameId]);
+            return frameToAuditoryPresentation(caretFrameObject);
         },
     },
 });
