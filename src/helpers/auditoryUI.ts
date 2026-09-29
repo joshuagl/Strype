@@ -16,10 +16,13 @@ export function humanReadableFrameType(frameType: string): string {
         return "import";
     case AllFrameTypesIdentifier.varassign:
         return "assignment";
+    case AllFrameTypesIdentifier.match:
+        return "match";
     /*
      * Frame containers are presented when we hit the top, and may be presented when we
      * respond to a "where am I?" command.
      */
+    // TODO(JGL): we need to localise container types
     case ContainerTypesIdentifiers.importsContainer:
         return "imports";
     case ContainerTypesIdentifiers.defsContainer:
