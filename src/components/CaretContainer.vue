@@ -414,7 +414,30 @@ export default defineComponent({
             // find the frame below caretFrameObject to present:
             // - is caretFrameObject a "parent" frame? Then we want to present their first child
             if (caretFrameObject.childrenIds.length > 0) {
-                accessibleLabel = frameToAuditoryPresentation(this.appStore.frameObjects[caretFrameObject.childrenIds[0]]);
+                if (this.caretAssignedPosition != CaretPosition.below) {
+                    accessibleLabel = frameToAuditoryPresentation(this.appStore.frameObjects[caretFrameObject.childrenIds[0]]);
+                }
+                else { // caret is below caretFrameObject
+                    const siblingIds = this.appStore.frameObjects[caretFrameObject.parentId].childrenIds;
+                    let found = false;
+                    let nextFrame = null;
+                    for (let sibling of siblingIds) {
+                        if (found) {
+                            nextFrame = this.appStore.frameObjects[sibling];
+                            break;
+                        }
+                        else if (sibling == caretFrameObject.id) {
+                            found = true;
+                        }
+                    }
+                    if (nextFrame) {
+                        accessibleLabel = frameToAuditoryPresentation(nextFrame);
+                    }
+                    else {
+                        // TODO(JGL): if caretFrame isn't a container frame type, give more context
+                        accessibleLabel = "End of " + humanReadableFrameType(this.appStore.frameObjects[caretFrameObject.parentId].frameType.type);
+                    }
+                }
             }
             // - is caretFrameObject an empty container frame
             else if (isContainerFrame(caretFrameObject) &&
@@ -469,13 +492,6 @@ export default defineComponent({
                     accessibleLabel = "End of " + humanReadableFrameType(this.appStore.frameObjects[caretFrameObject.parentId].frameType.type);
                 }
             }
-            // - is caretFrameObject a child at the bottom of a container?
-            // ... there is no next frame?
-            // else {
-            //     accessibleLabel = accessibleLabel + "Parent is " + (isContainerFrame(this.appStore.frameObjects[caretFrameObject.parentId]) ? "" : "not ") + "a container";
-            //     accessibleLabel = accessibleLabel + "\n Parent has " + this.appStore.frameObjects[caretFrameObject.parentId].childrenIds.length + " children";
-            //     accessibleLabel = accessibleLabel + "\n" + "end of code";
-            // }
 
             return accessibleLabel;
         },
