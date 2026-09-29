@@ -69,7 +69,7 @@ import { getFrameDefType, SlotType, MediaDataAndDim} from "@/types/types";
 import { getFrameLabelSlotsStructureUID, getLabelSlotUID } from "@/helpers/editor";
 import { preparePasteMediaData } from "@/helpers/media";
 import { getParentOrJointParent } from "@/helpers/storeMethods";
-import {frameToAuditoryPresentation, humanReadableFrameType} from "@/helpers/auditoryUI";
+import {frameToAuditoryPresentation, humanReadableFrameType, isContainerFrame} from "@/helpers/auditoryUI";
 // #v-endif
 
 //////////////////////
@@ -405,14 +405,79 @@ export default defineComponent({
         },
 
         computeAccessibleLabel(): string {
+            // FIXME(JGL): this string can't leak to the aUI!
+            let accessibleLabel = "oh no!?";
+
+            // We present the frame below so that the edit interactions, particularly -> into a
+            // statement, feel logical to screen reader users
             const caretFrameObject = this.appStore.frameObjects[this.frameId];
-            const frameType = humanReadableFrameType(caretFrameObject.frameType.type);
-            const belowFrame = this.caretAssignedPosition == CaretPosition.below;
-            if (!belowFrame) {
-                let frameDesc = frameToAuditoryPresentation(caretFrameObject);
-                return "Top of " + frameType + " " + frameDesc;
+            // find the frame below caretFrameObject to present:
+            // - is caretFrameObject a "parent" frame? Then we want to present their first child
+            if (caretFrameObject.childrenIds.length > 0) {
+                accessibleLabel = frameToAuditoryPresentation(this.appStore.frameObjects[caretFrameObject.childrenIds[0]]);
             }
-            return frameToAuditoryPresentation(caretFrameObject);
+            // - is caretFrameObject an empty container frame
+            else if (isContainerFrame(caretFrameObject) &&
+                     caretFrameObject.childrenIds.length == 0) {
+                accessibleLabel = "Within empty " + humanReadableFrameType(caretFrameObject.frameType.type);
+            }
+            // - is caretFrameObject a child with siblings?
+            else if (caretFrameObject.parentId > 0 &&
+                !isContainerFrame(this.appStore.frameObjects[caretFrameObject.parentId]) &&
+                this.appStore.frameObjects[caretFrameObject.parentId].childrenIds.length > 1) {
+                const siblingIds = this.appStore.frameObjects[caretFrameObject.parentId].childrenIds;
+                let found = false;
+                let nextFrame = null;
+                for (let sibling of siblingIds) {
+                    if (found) {
+                        nextFrame = this.appStore.frameObjects[sibling];
+                        break;
+                    }
+                    else if (sibling == caretFrameObject.id) {
+                        found = true;
+                    }
+                }
+                if (nextFrame) {
+                    accessibleLabel = frameToAuditoryPresentation(nextFrame);
+                }
+                else {
+                    // TODO(JGL): if caretFrame isn't a container frame type, give more context
+                    accessibleLabel = "End of " + humanReadableFrameType(this.appStore.frameObjects[caretFrameObject.parentId].frameType.type);
+                }
+            }
+            // - ... or just a child?
+            else if (this.appStore.frameObjects[caretFrameObject.parentId].childrenIds.length >= 1) {
+                // - ... we need the sibling of the parent?
+                let parent = this.appStore.frameObjects[caretFrameObject.parentId];
+                const siblingIds = parent.childrenIds;
+                let found = false;
+                let nextFrame = null;
+                for (let sibling of siblingIds) {
+                    if (found) {
+                        nextFrame = this.appStore.frameObjects[sibling];
+                        break;
+                    }
+                    else if (sibling == caretFrameObject.id) {
+                        found = true;
+                    }
+                }
+                if (nextFrame) {
+                    accessibleLabel = frameToAuditoryPresentation(nextFrame);
+                }
+                else {
+                    // TODO(JGL): if caretFrame isn't a container frame type, give more context
+                    accessibleLabel = "End of " + humanReadableFrameType(this.appStore.frameObjects[caretFrameObject.parentId].frameType.type);
+                }
+            }
+            // - is caretFrameObject a child at the bottom of a container?
+            // ... there is no next frame?
+            // else {
+            //     accessibleLabel = accessibleLabel + "Parent is " + (isContainerFrame(this.appStore.frameObjects[caretFrameObject.parentId]) ? "" : "not ") + "a container";
+            //     accessibleLabel = accessibleLabel + "\n Parent has " + this.appStore.frameObjects[caretFrameObject.parentId].childrenIds.length + " children";
+            //     accessibleLabel = accessibleLabel + "\n" + "end of code";
+            // }
+
+            return accessibleLabel;
         },
     },
 });
