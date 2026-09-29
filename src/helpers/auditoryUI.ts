@@ -54,7 +54,7 @@ export function frameToAuditoryPresentation(frame: FrameObject): string {
         startAtFrameId: frame.id,
         stopAt: {frameId: frame.id,
             includeThisFrame: true},
-        excludeComments: false
+        excludeComments: false,
     });
 
     // Class or function or loop, we'll want to narrate "context"
@@ -77,7 +77,7 @@ export function frameToAuditoryPresentation(frame: FrameObject): string {
         provideContext = false;
     }
 
-    let returnedLabel = frameType + " with code " + parsedCurrentFrame;
+    let returnedLabel = frameType + ", " + parsedCurrentFrame;
     if (provideContext) {
         returnedLabel += "in " + humanReadableFrameType(parentFrame.frameType.type);
     }
