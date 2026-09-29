@@ -92,3 +92,14 @@ export function auditoryEvent(event: string): void {
         setTimeout(() => (messageArea.textContent = event), 50);
     }
 }
+
+export function isContainerFrame(frame: FrameObject): boolean {
+    switch (frame.frameType.type) {
+    case ContainerTypesIdentifiers.importsContainer:
+    case ContainerTypesIdentifiers.defsContainer:
+    case ContainerTypesIdentifiers.framesMainContainer:
+        return true;
+    default:
+        return false;
+    }
+}
