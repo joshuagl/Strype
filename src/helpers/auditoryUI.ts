@@ -11,6 +11,8 @@ export function humanReadableFrameType(frameType: string): string {
         return "function call";
     case AllFrameTypesIdentifier.funcdef:
         return "function definition";
+    case AllFrameTypesIdentifier.classdef:
+        return "class definition";
     case AllFrameTypesIdentifier.fromimport:
         // TODO(JGL): very uncertain about this one...
         return "import";
