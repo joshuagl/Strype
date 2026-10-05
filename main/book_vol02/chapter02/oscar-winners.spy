@@ -1,0 +1,29 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":45.62}
+#(=> peaCommandsSplitterPane2Size:{"tabsCollapsed":66.17}
+'''oscar-winners, Version 0.1
+
+This project searches through the academy award (Oscar) nominees and prints out the details of the films that won.
+
+This project is part of the book "Creative Python Programming with Strype".
+Authors: Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+#(=> Section:Definitions
+def read_file (filename ) :
+    '''Read the contents of the file and return it as a string.'''
+    with open(filename,encoding="utf-8")  as file  :
+        data  = file.read() 
+    return data 
+def print_winners (data ) :
+    '''Searches the lines (which are assumed to be comma-separated fields) and finds all the Oscar winners'''
+    #\n is the line break symbol. If we split at \n, we are getting a list of separate lines.
+    lines  = data.split("\n") 
+    for line  in lines  :
+        if line != ""  :
+            title,director,year,status  = line.split(",") 
+            if status == "Won"  :
+                print(f"{year}: {title} (directed by {director})") 
+#(=> Section:Main
+data  = read_file("/data/oscar-best-picture-1950-2025.txt") 
+print_winners(data) 
+#(=> Section:End

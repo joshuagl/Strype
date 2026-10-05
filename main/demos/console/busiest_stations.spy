@@ -1,0 +1,22 @@
+#(=> Strype:1:std
+#(=> pinnedLocalFile1:london-underground-passengers-2025.txt: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
+'''This project uses file reading, sorting and list slicing to find London\'s five busiest Underground stations in 2025. Data: Powered by TfL Open Data, licensed under the Transport for London Open Data licence (based on the Open Government Licence v2.0).'''
+#(=> Section:Imports
+#(=> Section:Definitions
+def read_passenger_counts (filename ) :
+    '''Reads a file of "station,passengers in millions" lines and returns a list of (passengers, station) tuples'''
+    with open(filename)  as f  :
+        stations  = [] 
+        for line  in f  :
+            if line.strip() != ""  :
+                name,millions  = line.strip().split(",") 
+                stations.append((float(millions),name)) 
+    return stations 
+#(=> Section:Main
+#The passenger data is pinned into this project -- see the Files tab on the bottom right pane:
+stations  = read_passenger_counts("london-underground-passengers-2025.txt") 
+stations.sort(reverse=True) 
+busiest_five  = stations[:5] 
+for millions,name  in busiest_five  :
+    print(name + ": " + str(millions) + "m") 
+#(=> Section:End

@@ -9,3 +9,7 @@
 - file: text-analysis-v3.spy
   image: book.png
   description: The third version of the text analysis project
+
+- file: caesar-cypher.spy
+  image: caesar-cypher.png
+  description: A starter project to implement a simple encryption

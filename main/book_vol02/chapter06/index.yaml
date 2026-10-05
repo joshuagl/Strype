@@ -9,7 +9,3 @@
 - file: sounds-v3.spy
   image: soundwave.png
   description: The second version of the sound manipulation project
-
-- file: piano.spy
-  image: piano.png
-  description: A playable piano on screen

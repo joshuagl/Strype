@@ -1,0 +1,446 @@
+All the King's Men,Robert Rossen,1950,Won
+Battleground,William A. Wellman,1950,Nominated
+The Heiress,William Wyler,1950,Nominated
+A Letter to Three Wives,Joseph L. Mankiewicz,1950,Nominated
+Twelve O'Clock High,Henry King,1950,Nominated
+All About Eve,Joseph L. Mankiewicz,1951,Won
+Born Yesterday,George Cukor,1951,Nominated
+Father of the Bride,Vincente Minnelli,1951,Nominated
+King Solomon's Mines,Compton Bennett & Andrew Marton,1951,Nominated
+Sunset Boulevard,Billy Wilder,1951,Nominated
+An American in Paris,Vincente Minnelli,1952,Won
+Decision Before Dawn,Anatole Litvak,1952,Nominated
+A Place in the Sun,George Stevens,1952,Nominated
+Quo Vadis,Mervyn LeRoy & Anthony Mann,1952,Nominated
+A Streetcar Named Desire,Elia Kazan,1952,Nominated
+The Greatest Show on Earth,Cecil B. DeMille,1953,Won
+High Noon,Fred Zinnemann,1953,Nominated
+Ivanhoe,Richard Thorpe,1953,Nominated
+Moulin Rouge,John Huston,1953,Nominated
+The Quiet Man,John Ford,1953,Nominated
+From Here to Eternity,Fred Zinnemann,1954,Won
+Julius Caesar,Joseph L. Mankiewicz,1954,Nominated
+The Robe,Henry Koster,1954,Nominated
+Roman Holiday,William Wyler,1954,Nominated
+Shane,George Stevens,1954,Nominated
+On the Waterfront,Elia Kazan,1955,Won
+The Caine Mutiny,Edward Dmytryk,1955,Nominated
+The Country Girl,George Seaton,1955,Nominated
+Seven Brides for Seven Brothers,Stanley Donen,1955,Nominated
+Three Coins in the Fountain,Jean Negulesco,1955,Nominated
+Marty,Delbert Mann,1956,Won
+Love Is a Many-Splendored Thing,Henry King & Otto Lang,1956,Nominated
+Mister Roberts,John Ford & Mervyn LeRoy & Joshua Logan,1956,Nominated
+Picnic,Joshua Logan,1956,Nominated
+The Rose Tattoo,Daniel Mann,1956,Nominated
+Around the World in 80 Days,Michael Anderson & John Farrow,1957,Won
+Friendly Persuasion,William Wyler,1957,Nominated
+Giant,George Stevens,1957,Nominated
+The King and I,Walter Lang,1957,Nominated
+The Ten Commandments,Cecil B. DeMille,1957,Nominated
+The Bridge on the River Kwai,David Lean,1958,Won
+12 Angry Men,Sidney Lumet,1958,Nominated
+Peyton Place,Mark Robson,1958,Nominated
+Sayonara,Joshua Logan,1958,Nominated
+Witness for the Prosecution,Billy Wilder,1958,Nominated
+Gigi,Vincente Minnelli & Charles Walters,1959,Won
+Auntie Mame,Morton DaCosta,1959,Nominated
+Cat on a Hot Tin Roof,Richard Brooks,1959,Nominated
+The Defiant Ones,Stanley Kramer,1959,Nominated
+Separate Tables,Delbert Mann,1959,Nominated
+Ben-Hur,William Wyler,1960,Won
+Anatomy of a Murder,Otto Preminger,1960,Nominated
+The Diary of Anne Frank,George Stevens,1960,Nominated
+The Nun's Story,Fred Zinnemann,1960,Nominated
+Room at the Top,Jack Clayton,1960,Nominated
+The Apartment,Billy Wilder,1961,Won
+The Alamo,John Wayne,1961,Nominated
+Elmer Gantry,Richard Brooks,1961,Nominated
+Sons and Lovers,Jack Cardiff,1961,Nominated
+The Sundowners,Fred Zinnemann,1961,Nominated
+West Side Story,Jerome Robbins & Robert Wise,1962,Won
+Fanny,Joshua Logan,1962,Nominated
+The Guns of Navarone,J. Lee Thompson,1962,Nominated
+The Hustler,Robert Rossen,1962,Nominated
+Judgment at Nuremberg,Stanley Kramer,1962,Nominated
+Lawrence of Arabia,David Lean,1963,Won
+The Longest Day,Gerd Oswald & Darryl F. Zanuck,1963,Nominated
+The Music Man,Morton DaCosta,1963,Nominated
+Mutiny on the Bounty,Lewis Milestone & Carol Reed & George Seaton,1963,Nominated
+To Kill a Mockingbird,Robert Mulligan,1963,Nominated
+Tom Jones,Tony Richardson,1964,Won
+America America,Elia Kazan,1964,Nominated
+Cleopatra,Joseph L. Mankiewicz & Rouben Mamoulian,1964,Nominated
+How the West Was Won,John Ford & Henry Hathaway & George Marshall & Richard Thorpe,1964,Nominated
+Lilies of the Field,Ralph Nelson,1964,Nominated
+My Fair Lady,George Cukor,1965,Won
+Becket,Peter Glenville,1965,Nominated
+Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb,Stanley Kubrick,1965,Nominated
+Mary Poppins,Robert Stevenson,1965,Nominated
+Zorba the Greek,Michael Cacoyannis,1965,Nominated
+The Sound of Music,Robert Wise,1966,Won
+Darling,John Schlesinger,1966,Nominated
+Doctor Zhivago,David Lean,1966,Nominated
+Ship of Fools,Stanley Kramer,1966,Nominated
+A Thousand Clowns,Fred Coe,1966,Nominated
+A Man for All Seasons,Fred Zinnemann,1967,Won
+Alfie,Lewis Gilbert,1967,Nominated
+The Russians Are Coming the Russians Are Coming,Norman Jewison,1967,Nominated
+The Sand Pebbles,Robert Wise,1967,Nominated
+Who's Afraid of Virginia Woolf?,Mike Nichols,1967,Nominated
+In the Heat of the Night,Norman Jewison,1968,Won
+Bonnie and Clyde,Arthur Penn,1968,Nominated
+Doctor Dolittle,Richard Fleischer,1968,Nominated
+The Graduate,Mike Nichols,1968,Nominated
+Guess Who's Coming to Dinner,Stanley Kramer,1968,Nominated
+Oliver!,Carol Reed,1969,Won
+Funny Girl,William Wyler,1969,Nominated
+The Lion in Winter,Anthony Harvey,1969,Nominated
+Rachel Rachel,Paul Newman,1969,Nominated
+Romeo and Juliet,Franco Zeffirelli,1969,Nominated
+Midnight Cowboy,John Schlesinger,1970,Won
+Anne of the Thousand Days,Charles Jarrott,1970,Nominated
+Butch Cassidy and the Sundance Kid,George Roy Hill,1970,Nominated
+Hello Dolly!,Gene Kelly,1970,Nominated
+Z,Costa-Gavras,1970,Nominated
+Patton,Franklin J. Schaffner,1971,Won
+Airport,George Seaton & Henry Hathaway,1971,Nominated
+Five Easy Pieces,Bob Rafelson,1971,Nominated
+Love Story,Arthur Hiller,1971,Nominated
+M*A*S*H,Robert Altman,1971,Nominated
+The French Connection,William Friedkin,1972,Won
+A Clockwork Orange,Stanley Kubrick,1972,Nominated
+Fiddler on the Roof,Norman Jewison,1972,Nominated
+The Last Picture Show,Peter Bogdanovich,1972,Nominated
+Nicholas and Alexandra,Franklin J. Schaffner,1972,Nominated
+The Godfather,Francis Ford Coppola,1973,Won
+Cabaret,Bob Fosse,1973,Nominated
+Deliverance,John Boorman,1973,Nominated
+The Emigrants,Jan Troell,1973,Nominated
+Sounder,Martin Ritt,1973,Nominated
+The Sting,George Roy Hill,1974,Won
+American Graffiti,George Lucas,1974,Nominated
+Cries and Whispers,Ingmar Bergman,1974,Nominated
+The Exorcist,William Friedkin,1974,Nominated
+A Touch of Class,Melvin Frank,1974,Nominated
+The Godfather Part II,Francis Ford Coppola,1975,Won
+Chinatown,Roman Polanski,1975,Nominated
+The Conversation,Francis Ford Coppola,1975,Nominated
+Lenny,Bob Fosse,1975,Nominated
+The Towering Inferno,John Guillermin,1975,Nominated
+One Flew Over the Cuckoo's Nest,Miloš Forman,1976,Won
+Barry Lyndon,Stanley Kubrick,1976,Nominated
+Dog Day Afternoon,Sidney Lumet,1976,Nominated
+Jaws,Steven Spielberg,1976,Nominated
+Nashville,Robert Altman,1976,Nominated
+Rocky,John G. Avildsen,1977,Won
+All the President's Men,Alan J. Pakula,1977,Nominated
+Bound for Glory,Hal Ashby,1977,Nominated
+Network,Sidney Lumet,1977,Nominated
+Taxi Driver,Martin Scorsese,1977,Nominated
+Annie Hall,Woody Allen,1978,Won
+The Goodbye Girl,Herbert Ross,1978,Nominated
+Julia,Fred Zinnemann,1978,Nominated
+Star Wars,George Lucas,1978,Nominated
+The Turning Point,Herbert Ross,1978,Nominated
+The Deer Hunter,Michael Cimino,1979,Won
+Coming Home,Hal Ashby,1979,Nominated
+Heaven Can Wait,Warren Beatty & Buck Henry,1979,Nominated
+Midnight Express,Alan Parker,1979,Nominated
+An Unmarried Woman,Paul Mazursky,1979,Nominated
+Kramer vs. Kramer,Robert Benton,1980,Won
+All That Jazz,Bob Fosse,1980,Nominated
+Apocalypse Now,Francis Ford Coppola,1980,Nominated
+Breaking Away,Peter Yates,1980,Nominated
+Norma Rae,Martin Ritt,1980,Nominated
+Ordinary People,Robert Redford,1981,Won
+Coal Miner's Daughter,Michael Apted,1981,Nominated
+The Elephant Man,David Lynch,1981,Nominated
+Raging Bull,Martin Scorsese,1981,Nominated
+Tess,Roman Polanski,1981,Nominated
+Chariots of Fire,Hugh Hudson,1982,Won
+Atlantic City,Louis Malle,1982,Nominated
+On Golden Pond,Mark Rydell,1982,Nominated
+Raiders of the Lost Ark,Steven Spielberg,1982,Nominated
+Reds,Warren Beatty,1982,Nominated
+Gandhi,Richard Attenborough,1983,Won
+E.T. the Extra-Terrestrial,Steven Spielberg,1983,Nominated
+Missing,Costa-Gavras,1983,Nominated
+Tootsie,Sydney Pollack,1983,Nominated
+The Verdict,Sidney Lumet,1983,Nominated
+Terms of Endearment,James L. Brooks,1984,Won
+The Big Chill,Lawrence Kasdan,1984,Nominated
+The Dresser,Peter Yates,1984,Nominated
+The Right Stuff,Philip Kaufman,1984,Nominated
+Tender Mercies,Bruce Beresford,1984,Nominated
+Amadeus,Miloš Forman,1985,Won
+The Killing Fields,Roland Joffé,1985,Nominated
+A Passage to India,David Lean,1985,Nominated
+Places in the Heart,Robert Benton,1985,Nominated
+A Soldier's Story,Norman Jewison,1985,Nominated
+Out of Africa,Sydney Pollack,1986,Won
+The Color Purple,Steven Spielberg,1986,Nominated
+Kiss of the Spider Woman,Hector Babenco,1986,Nominated
+Prizzi's Honor,John Huston,1986,Nominated
+Witness,Peter Weir,1986,Nominated
+Platoon,Oliver Stone,1987,Won
+Children of a Lesser God,Randa Haines,1987,Nominated
+Hannah and Her Sisters,Woody Allen,1987,Nominated
+The Mission,Roland Joffé,1987,Nominated
+A Room with a View,James Ivory,1987,Nominated
+The Last Emperor,Bernardo Bertolucci,1988,Won
+Broadcast News,James L. Brooks,1988,Nominated
+Fatal Attraction,Adrian Lyne,1988,Nominated
+Hope and Glory,John Boorman,1988,Nominated
+Moonstruck,Norman Jewison,1988,Nominated
+Rain Man,Barry Levinson,1989,Won
+The Accidental Tourist,Lawrence Kasdan,1989,Nominated
+Dangerous Liaisons,Stephen Frears,1989,Nominated
+Mississippi Burning,Alan Parker,1989,Nominated
+Working Girl,Mike Nichols,1989,Nominated
+Driving Miss Daisy,Bruce Beresford,1990,Won
+Born on the Fourth of July,Oliver Stone,1990,Nominated
+Dead Poets Society,Peter Weir,1990,Nominated
+Field of Dreams,Phil Alden Robinson,1990,Nominated
+My Left Foot,Jim Sheridan,1990,Nominated
+Dances With Wolves,Kevin Costner,1991,Won
+Awakenings,Penny Marshall,1991,Nominated
+Ghost,Jerry Zucker,1991,Nominated
+The Godfather Part III,Francis Ford Coppola,1991,Nominated
+Goodfellas,Martin Scorsese,1991,Nominated
+The Silence of the Lambs,Jonathan Demme,1992,Won
+Beauty and the Beast,Gary Trousdale & Kirk Wise,1992,Nominated
+Bugsy,Barry Levinson,1992,Nominated
+JFK,Oliver Stone,1992,Nominated
+The Prince of Tides,Barbra Streisand,1992,Nominated
+Unforgiven,Clint Eastwood,1993,Won
+The Crying Game,Neil Jordan,1993,Nominated
+A Few Good Men,Rob Reiner,1993,Nominated
+Howards End,James Ivory,1993,Nominated
+Scent of a Woman,Martin Brest,1993,Nominated
+Schindler's List,Steven Spielberg,1994,Won
+The Fugitive,Andrew Davis,1994,Nominated
+In the Name of the Father,Jim Sheridan,1994,Nominated
+The Piano,Jane Campion,1994,Nominated
+The Remains of the Day,James Ivory,1994,Nominated
+Forrest Gump,Robert Zemeckis,1995,Won
+Four Weddings and a Funeral,Mike Newell,1995,Nominated
+Pulp Fiction,Quentin Tarantino,1995,Nominated
+Quiz Show,Robert Redford,1995,Nominated
+The Shawshank Redemption,Frank Darabont,1995,Nominated
+Braveheart,Mel Gibson,1996,Won
+Apollo 13,Ron Howard,1996,Nominated
+Babe,Chris Noonan,1996,Nominated
+Il Postino: The Postman,Michael Radford,1996,Nominated
+Sense and Sensibility,Ang Lee,1996,Nominated
+The English Patient,Anthony Minghella,1997,Won
+Fargo,Joel Coen & Ethan Coen,1997,Nominated
+Jerry Maguire,Cameron Crowe,1997,Nominated
+Secrets & Lies,Mike Leigh,1997,Nominated
+Shine,Scott Hicks,1997,Nominated
+Titanic,James Cameron,1998,Won
+As Good as It Gets,James L. Brooks,1998,Nominated
+The Full Monty,Peter Cattaneo,1998,Nominated
+Good Will Hunting,Gus Van Sant,1998,Nominated
+L.A. Confidential,Curtis Hanson,1998,Nominated
+Shakespeare in Love,John Madden,1999,Won
+Elizabeth,Shekhar Kapur,1999,Nominated
+Life Is Beautiful,Roberto Benigni,1999,Nominated
+Saving Private Ryan,Steven Spielberg,1999,Nominated
+The Thin Red Line,Terrence Malick,1999,Nominated
+American Beauty,Sam Mendes,2000,Won
+The Cider House Rules,Lasse Hallström,2000,Nominated
+The Green Mile,Frank Darabont,2000,Nominated
+The Insider,Michael Mann,2000,Nominated
+The Sixth Sense,M. Night Shyamalan,2000,Nominated
+Gladiator,Ridley Scott,2001,Won
+Chocolat,Lasse Hallström,2001,Nominated
+Crouching Tiger Hidden Dragon,Ang Lee,2001,Nominated
+Erin Brockovich,Steven Soderbergh,2001,Nominated
+Traffic,Steven Soderbergh,2001,Nominated
+A Beautiful Mind,Ron Howard,2002,Won
+Gosford Park,Robert Altman,2002,Nominated
+In the Bedroom,Todd Field,2002,Nominated
+The Lord of the Rings: The Fellowship of the Ring,Peter Jackson,2002,Nominated
+Moulin Rouge!,Baz Luhrmann,2002,Nominated
+Chicago,Rob Marshall,2003,Won
+Gangs of New York,Martin Scorsese,2003,Nominated
+The Hours,Stephen Daldry,2003,Nominated
+The Lord of the Rings: The Two Towers,Peter Jackson,2003,Nominated
+The Pianist,Roman Polanski,2003,Nominated
+The Lord of the Rings: The Return of the King,Peter Jackson,2004,Won
+Lost in Translation,Sofia Coppola,2004,Nominated
+Master and Commander: The Far Side of the World,Peter Weir,2004,Nominated
+Mystic River,Clint Eastwood,2004,Nominated
+Seabiscuit,Gary Ross,2004,Nominated
+Million Dollar Baby,Clint Eastwood,2005,Won
+The Aviator,Martin Scorsese,2005,Nominated
+Finding Neverland,Marc Forster,2005,Nominated
+Ray,Taylor Hackford,2005,Nominated
+Sideways,Alexander Payne,2005,Nominated
+Crash,Paul Haggis,2006,Won
+Brokeback Mountain,Ang Lee,2006,Nominated
+Capote,Bennett Miller,2006,Nominated
+Good Night and Good Luck,George Clooney,2006,Nominated
+Munich,Steven Spielberg,2006,Nominated
+The Departed,Martin Scorsese,2007,Won
+Babel,Alejandro G. Iñárritu,2007,Nominated
+Letters from Iwo Jima,Clint Eastwood,2007,Nominated
+Little Miss Sunshine,Jonathan Dayton & Valerie Faris,2007,Nominated
+The Queen,Stephen Frears,2007,Nominated
+No Country for Old Men,Ethan Coen & Joel Coen,2008,Won
+Atonement,Joe Wright,2008,Nominated
+Juno,Jason Reitman,2008,Nominated
+Michael Clayton,Tony Gilroy,2008,Nominated
+There Will Be Blood,Paul Thomas Anderson,2008,Nominated
+Slumdog Millionaire,Danny Boyle & Loveleen Tandan,2009,Won
+The Curious Case of Benjamin Button,David Fincher,2009,Nominated
+Frost/Nixon,Ron Howard,2009,Nominated
+Milk,Gus Van Sant,2009,Nominated
+The Reader,Stephen Daldry,2009,Nominated
+The Hurt Locker,Kathryn Bigelow,2010,Won
+Avatar,James Cameron,2010,Nominated
+The Blind Side,John Lee Hancock,2010,Nominated
+District 9,Neill Blomkamp,2010,Nominated
+An Education,Lone Scherfig,2010,Nominated
+Inglourious Basterds,Quentin Tarantino,2010,Nominated
+Precious: Based on the Novel "Push" by Sapphire,Lee Daniels,2010,Nominated
+A Serious Man,Ethan Coen & Joel Coen,2010,Nominated
+Up,Pete Docter & Bob Peterson,2010,Nominated
+Up in the Air,Pete Docter & Bob Peterson,2010,Nominated
+The King's Speech,Tom Hooper,2011,Won
+Black Swan,Darren Aronofsky,2011,Nominated
+The Fighter,David O. Russell,2011,Nominated
+Inception,Christopher Nolan,2011,Nominated
+The Kids Are All Right,Lisa Cholodenko,2011,Nominated
+127 Hours,Danny Boyle,2011,Nominated
+The Social Network,David Fincher,2011,Nominated
+Toy Story 3,Lee Unkrich,2011,Nominated
+True Grit,Ethan Coen & Joel Coen,2011,Nominated
+Winter's Bone,Debra Granik,2011,Nominated
+The Artist,Michel Hazanavicius,2012,Won
+The Descendants,Alexander Payne,2012,Nominated
+Extremely Loud & Incredibly Close,Stephen Daldry,2012,Nominated
+The Help,Tate Taylor,2012,Nominated
+Hugo,Martin Scorsese,2012,Nominated
+Midnight in Paris,Woody Allen,2012,Nominated
+Moneyball,Bennett Miller,2012,Nominated
+The Tree of Life,Terrence Malick,2012,Nominated
+War Horse,Steven Spielberg,2012,Nominated
+Argo,Ben Affleck,2013,Won
+Amour,Michael Haneke,2013,Nominated
+Beasts of the Southern Wild,Spike Jonze,2013,Nominated
+Django Unchained,Quentin Tarantino,2013,Nominated
+Life of Pi,Ang Lee,2013,Nominated
+Lincoln,Steven Spielberg,2013,Nominated
+Les Misérables,Tom Hooper,2013,Nominated
+Silver Linings Playbook,David O. Russell,2013,Nominated
+Zero Dark Thirty,Kathryn Bigelow,2013,Nominated
+12 Years a Slave,Steve McQueen,2014,Won
+American Hustle,David O. Russell,2014,Nominated
+Captain Phillips,Paul Greengrass,2014,Nominated
+Dallas Buyers Club,Jean-Marc Vallée,2014,Nominated
+Gravity,Alfonso Cuarón,2014,Nominated
+Her,Spike Jonze,2014,Nominated
+Nebraska,Alexander Payne,2014,Nominated
+Philomena,Stephen Frears,2014,Nominated
+The Wolf of Wall Street,Martin Scorsese,2014,Nominated
+Birdman or (The Unexpected Virtue of Ignorance),Alejandro G. Iñárritu,2015,Won
+American Sniper,Clint Eastwood,2015,Nominated
+Boyhood,Richard Linklater,2015,Nominated
+The Grand Budapest Hotel,Wes Anderson,2015,Nominated
+The Imitation Game,Morten Tyldum,2015,Nominated
+Selma,Ava DuVernay,2015,Nominated
+The Theory of Everything,James Marsh,2015,Nominated
+Whiplash,Damien Chazelle,2015,Nominated
+Spotlight,Tom McCarthy,2016,Won
+The Big Short,Adam McKay,2016,Nominated
+Bridge of Spies,Steven Spielberg,2016,Nominated
+Brooklyn,John Crowley,2016,Nominated
+Mad Max: Fury Road,George Miller,2016,Nominated
+The Martian,Ridley Scott,2016,Nominated
+The Revenant,Alejandro G. Iñárritu,2016,Nominated
+Room,Lenny Abrahamson,2016,Nominated
+Moonlight,Barry Jenkins,2017,Won
+Arrival,Denis Villeneuve,2017,Nominated
+Fences,Denzel Washington,2017,Nominated
+Hacksaw Ridge,Mel Gibson,2017,Nominated
+Hell or High Water,David Mackenzie,2017,Nominated
+Hidden Figures,Theodore Melfi,2017,Nominated
+La La Land,Damien Chazelle,2017,Nominated
+Lion,Garth Davis,2017,Nominated
+Manchester by the Sea,Kenneth Lonergan,2017,Nominated
+The Shape of Water,Guillermo del Toro,2018,Won
+Call Me by Your Name,Luca Guadagnino,2018,Nominated
+Darkest Hour,Joe Wright,2018,Nominated
+Dunkirk,Christopher Nolan,2018,Nominated
+Get Out,Jordan Peele,2018,Nominated
+Lady Bird,Greta Gerwig,2018,Nominated
+Phantom Thread,Paul Thomas Anderson,2018,Nominated
+The Post,Steven Spielberg,2018,Nominated
+Three Billboards Outside Ebbing Missouri,Martin McDonagh,2018,Nominated
+Green Book,Peter Farrelly,2019,Won
+Black Panther,Ryan Coogler,2019,Nominated
+BlacKkKlansman,Spike Lee,2019,Nominated
+Bohemian Rhapsody,Bryan Singer,2019,Nominated
+The Favourite,Yorgos Lanthimos,2019,Nominated
+Roma,Alfonso Cuarón,2019,Nominated
+A Star Is Born,Bradley Cooper,2019,Nominated
+Vice,Adam McKay,2019,Nominated
+Parasite,Bong Joon Ho,2020,Won
+Ford v Ferrari,James Mangold,2020,Nominated
+The Irishman,Martin Scorsese,2020,Nominated
+Jojo Rabbit,Taika Waititi,2020,Nominated
+Joker,Todd Phillips,2020,Nominated
+Little Women,Greta Gerwig,2020,Nominated
+Marriage Story,Noah Baumbach,2020,Nominated
+1917,Sam Mendes,2020,Nominated
+Once Upon a Time in Hollywood,Quentin Tarantino,2020,Nominated
+Nomadland,Chloé Zhao,2021,Won
+The Father,Florian Zeller,2021,Nominated
+Judas and the Black Messiah,Shaka King,2021,Nominated
+Mank,David Fincher,2021,Nominated
+Minari,Lee Isaac Chung,2021,Nominated
+Promising Young Woman,Emerald Fennell,2021,Nominated
+Sound of Metal,Darius Marder,2021,Nominated
+The Trial of the Chicago 7,Aaron Sorkin,2021,Nominated
+CODA,Sian Heder,2022,Won
+Belfast,Kenneth Branagh,2022,Nominated
+Don't Look Up,Adam McKay,2022,Nominated
+Drive My Car,Ryusuke Hamaguchi,2022,Nominated
+Dune,Denis Villeneuve,2022,Nominated
+King Richard,Reinaldo Marcus Green,2022,Nominated
+Licorice Pizza,Paul Thomas Anderson,2022,Nominated
+Nightmare Alley,Guillermo del Toro,2022,Nominated
+The Power of the Dog,Jane Campion,2022,Nominated
+West Side Story,Steven Spielberg,2022,Nominated
+Everything Everywhere All at Once,Daniel Kwan & Daniel Scheinert,2023,Won
+All Quiet on the Western Front,Edward Berger,2023,Nominated
+Avatar: The Way of Water,James Cameron,2023,Nominated
+The Banshees of Inisherin,Martin McDonagh,2023,Nominated
+Elvis,Baz Luhrmann,2023,Nominated
+The Fabelmans,Steven Spielberg,2023,Nominated
+Tár,Todd Field,2023,Nominated
+Top Gun: Maverick,Joseph Kosinski,2023,Nominated
+Triangle of Sadness,Ruben Östlund,2023,Nominated
+Women Talking,Sarah Polley,2023,Nominated
+Oppenheimer,Christopher Nolan,2024,Won
+American Fiction,Cord Jefferson,2024,Nominated
+Anatomy of a Fall,Justine Triet,2024,Nominated
+Barbie,Greta Gerwig,2024,Nominated
+The Holdovers,Alexander Payne,2024,Nominated
+Killers of the Flower Moon,Martin Scorsese,2024,Nominated
+Maestro,Bradley Cooper,2024,Nominated
+Past Lives,Celine Song,2024,Nominated
+Poor Things,Yorgos Lanthimos,2024,Nominated
+The Zone of Interest,Jonathan Glazer,2024,Nominated
+Anora,Sean Baker,2025,Won
+The Brutalist,Brady Corbet,2025,Nominated
+A Complete Unknown,James Mangold,2025,Nominated
+Conclave,Edward Berger,2025,Nominated
+Dune: Part Two,Denis Villeneuve,2025,Nominated
+Emilia Pérez,Jacques Audiard,2025,Nominated
+I'm Still Here,Walter Salles,2025,Nominated
+Nickel Boys,RaMell Ross,2025,Nominated
+The Substance,Coralie Fargeat,2025,Nominated
+Wicked,Jon M. Chu,2025,Nominated

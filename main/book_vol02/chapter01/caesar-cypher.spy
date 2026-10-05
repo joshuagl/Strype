@@ -1,0 +1,46 @@
+#(=> Strype:1:std
+'''Caesar Cypher, Version 0.1
+
+This project implements a Caesar cipher, which creates a secret message by changing all the characters by one value, so "a" becomes "b", "b" becomes "c" and so on.  Thus "Hello" becomes "Ifmmp".
+
+This version, however, is incomplete and does not yet work.
+
+This project is part of the book "Creative programming with Strype".
+Authors: Michael Kölling and Neil C.C. Brown'''
+#(=> Section:Imports
+#(=> Section:Definitions
+def encode_one_character (character ) :
+    '''Encode a single character using a step one Caesar cipher (that is: shift one character forward).'''
+    #The 'ord' function turns a character into a number...
+    code  = ord(character) 
+    #letter characters have codes over 32; spaces and tabs have codes <= 32
+    if code > 32  :
+        #... and the 'chr' function changes a number back to a character
+        result  = chr(code + 1) 
+    else :
+        # leave spaces and newlines untouched:
+        result  = character 
+    return result 
+def caesar_encode (text ) :
+    '''Encodes using a Caesar cipher: change all the characters values in the text'''
+    #TODO: implement this function
+    return "" 
+def caesar_decode (text ) :
+    '''Take an encoded text and turn it back into clear text'''
+    #TODO: implement this function
+    return "" 
+#(=> Section:Main
+#This is just for testing:
+char  = "a" 
+print("Character:",char) 
+print("Encoded:",encode_one_character(char)) 
+print() 
+
+#The following does not work yet (until you implement the 'caesar_encode' message)
+message  = "Meet me by the old oak tree at midnight!" 
+secret  = caesar_encode(message) 
+print(message) 
+print(f"Encoded: {secret}") 
+
+#Once you have encoded the message, send it to a friend. Implement the 'caesar_decode' function to decode the response you may get from your friend.
+#(=> Section:End

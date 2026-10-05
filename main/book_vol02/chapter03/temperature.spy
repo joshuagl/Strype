@@ -12,16 +12,17 @@ Copyright ©: Michael Kölling and Neil C.C. Brown'''
 #(=> FrameState:FoldToHeader;Frozen
 def read_file (filename ) :
     '''Read a text file from disk and return the content of the file as a list of strings, with each line an item in the list.
-    
-    Parameter:   
-       filename : str
-           The name of the file to be read. The file must exist in the same 
-           folder in a cloud file system where this program is stored.
-    Returns:
-       list(str): A list of strings with the lines from the file'''
+        
+        Parameter:   
+           filename : str
+               The name of the file to be read. The file must exist in the same 
+               folder in a cloud file system where this program is stored.
+        Returns:
+           list(str): A list of strings with the lines from the file'''
     with open(filename,"r")  as file  :
-        data  = file.readlines() 
-    return data 
+        all  = file.read() 
+    lines  = all.split() 
+    return lines 
 #(=> Section:Main
 data  = read_file("/data/london-temperature-2025.txt") 
 #(=> Section:End
