@@ -1,0 +1,199 @@
+#(=> Strype:1:std
+#(=> editorCommandsSplitterPane2Size:{"tabsCollapsed":51.67,"splitCollapsed":45.23}
+#(=> peaLayoutMode:splitCollapsed
+#(=> peaCommandsSplitterPane2Size:{"tabsCollapsed":66.27,"splitCollapsed":82.97}
+#(=> peaSplitViewSplitterPane1Size:{"splitCollapsed":78.12}
+'''Renewables. Version 1.0
+
+This is a demo project that shows some data analysis using pandas and pyplot.
+It reads a csv file with data about renewable energy production across the world (in 2020-2025), separated by country.
+
+There is a constant called WRITE_PNG at the beginning of the \'My code\' section – set this to True to generate PNG image files with the graphs. For the writing of the image files to work, the project must be stored in a cloud file system, so that the program can write the files. 
+
+If you want to use your own csv file, it must be stored in a cloud file system in the same folder as the project.
+
+Source of the data file: https://github.com/owid/energy-data (via kaggle.com/datasets), licenced under CC BY-SA 4.0
+
+This project is part of the book "Creative Python Programming with Strype".
+Author: Michael Kölling'''
+#(=> Section:Imports
+import pandas as pd 
+import numpy as np 
+import matplotlib.pyplot as plt 
+import matplotlib.ticker as mticker 
+#(=> Section:Definitions
+#(=> FrameState:FoldToHeader
+def global_share ( ) :
+    '''Global renewable share of energy & electricity over time'''
+    clear_console() 
+    print("The share of renewable energy generated worldwide, as a percentage of electricity, and as a percentage of all energy.") 
+    fig,ax  = plt.subplots(figsize=(10,6)) 
+    ax.plot(world["year"],world["renewables_share_energy"],label="Share of primary energy",color=COLORS["renew"],linewidth=2.5) 
+    ax.plot(world["year"],world["renewables_share_elec"],label="Share of electricity generation",color="#1565c0",linewidth=2.5) 
+    ax.set_title("Global Renewable Energy Adoption Is Accelerating",fontsize=14,weight="bold") 
+    ax.set_xlabel("Year") 
+    ax.set_ylabel("Share (%)") 
+    ax.legend(loc="upper left",frameon=True) 
+    ax.set_xlim(world["year"].min(),world["year"].max()) 
+    fig.tight_layout() 
+    plt.show() 
+    if WRITE_PNG  :
+        print("Writing image file...") 
+        fig.savefig(f"1_global_renewable_trend.png",dpi=150) 
+    plt.close(fig) 
+#(=> FrameState:FoldToHeader
+def top_countries ( ) :
+    '''Top 15 countries by renewable share of electricity (latest year)'''
+    clear_console() 
+    print("The top 15 countries by renewable share of electricity (in the last year for which data was available).") 
+    latest_year  = countries.loc[countries["renewables_share_elec"].notna(),"year"].max() 
+    latest  = countries[countries["year"] == latest_year].dropna(subset=["renewables_share_elec"]) 
+    # require a minimum generation level so tiny islands with one hydro dam don't dominate
+    latest  = latest[latest["electricity_generation"] > 1] 
+    top15  = latest.nlargest(15,"renewables_share_elec").sort_values("renewables_share_elec") 
+    fig,ax  = plt.subplots(figsize=(10,7)) 
+    bars  = ax.barh(top15["country"],top15["renewables_share_elec"],color=COLORS["renew"]) 
+    ax.bar_label(bars,fmt="%.0f%%",padding=3) 
+    ax.set_title(f"Top 15 Countries by Renewable Share of Electricity ({latest_year})",fontsize=14,weight="bold") 
+    ax.set_xlabel("Share of electricity from renewables (%)") 
+    ax.set_xlim(0,105) 
+    fig.tight_layout() 
+    plt.show() 
+    if WRITE_PNG  :
+        print("Writing image file...") 
+        fig.savefig(f"2_top15_renewable_countries.png",dpi=150) 
+    plt.close(fig) 
+#(=> FrameState:FoldToHeader
+def elecricity_mix ( ) :
+    '''Global electricity mix by source, stacked area (2000-latest)'''
+    clear_console() 
+    print("The global electricity mix by source of energy.") 
+    sources  = ["coal_electricity","gas_electricity","oil_electricity","nuclear_electricity","hydro_electricity","wind_electricity","solar_electricity"] 
+    labels  = ["Coal","Gas","Oil","Nuclear","Hydro","Wind","Solar"] 
+    colors  = [COLORS["coal"],COLORS["gas"],COLORS["oil"],COLORS["nuclear"],COLORS["hydro"],COLORS["wind"],COLORS["solar"]] 
+    mix  = world.set_index("year")[sources] 
+    fig,ax  = plt.subplots(figsize=(11,6.5)) 
+    ax.stackplot(mix.index,[mix[c] for c in sources],labels=labels,colors=colors) 
+    ax.set_title("Global Electricity Generation by Source (TWh)",fontsize=14,weight="bold") 
+    ax.set_xlabel("Year") 
+    ax.set_ylabel("Electricity generation (TWh)") 
+    ax.legend(loc="upper left",ncol=2,frameon=True) 
+    ax.set_xlim(mix.index.min(),mix.index.max()) 
+    fig.tight_layout() 
+    plt.show() 
+    if WRITE_PNG  :
+        print("Writing image file...") 
+        fig.savefig(f"3_global_electricity_mix.png",dpi=150) 
+    plt.close(fig) 
+#(=> FrameState:FoldToHeader
+def biggest_movers ( ) :
+    '''Biggest movers: largest increase in renewable electricity share'''
+    clear_console() 
+    print("The countries with the biggest improvement in adding renewables to their energy mix (2000-2025).") 
+    latest_year  = countries.loc[countries["renewables_share_elec"].notna(),"year"].max() 
+    y0,y1  = 2000,latest_year 
+    start  = countries[(countries["year"] == y0)][["country","renewables_share_elec"]].rename(columns={"renewables_share_elec":"start"}) 
+    end  = countries[(countries["year"] == y1)][["country","renewables_share_elec","electricity_generation"]].rename(columns={"renewables_share_elec":"end"}) 
+    change  = start.merge(end,on="country").dropna() 
+    change  = change[change["electricity_generation"] > 5] 
+    # meaningful grid size
+    change["delta"]  = change["end"] - change["start"] 
+    movers  = change.nlargest(12,"delta").sort_values("delta") 
+    
+    fig,ax  = plt.subplots(figsize=(10,7)) 
+    bars  = ax.barh(movers["country"],movers["delta"],color="#00897b") 
+    ax.bar_label(bars,fmt="+%.0f pts",padding=3) 
+    ax.set_title(f"Biggest Increases in Renewable Electricity Share ({y0}\u2013{y1})",fontsize=14,weight="bold") 
+    ax.set_xlabel("Percentage point increase in renewable share of electricity") 
+    fig.tight_layout() 
+    plt.show() 
+    if WRITE_PNG  :
+        print("Writing image file...") 
+        fig.savefig(f"4_biggest_movers.png",dpi=150) 
+    plt.close(fig) 
+def energy_vs_GDP ( ) :
+    '''GDP per capita vs renewable energy share (scatter, latest year w/ GDP)'''
+    clear_console() 
+    print("Renewable energy share by GDP per capita. The y-axis shows the renewable energy as a percentage of the country, the size of the circle shows the absolute energy amount.") 
+    gdp_year  = countries.loc[countries["gdp"].notna(),"year"].max() 
+    snap  = countries[(countries["year"] == gdp_year)].dropna(subset=["gdp","population","renewables_share_energy"]) 
+    snap  = snap[snap["population"] > 0] 
+    snap["gdp_per_capita"]  = snap["gdp"] / snap["population"] 
+    
+    fig,ax  = plt.subplots(figsize=(10,7)) 
+    sizes  = np.clip(snap["population"] / snap["population"].max() * 3000,20,3000) 
+    sc  = ax.scatter(snap["gdp_per_capita"],snap["renewables_share_energy"],s=sizes,alpha=0.55,c=COLORS["renew"],edgecolors="white",linewidth=0.5) 
+    ax.set_xscale("log") 
+    ax.set_title(f"Wealth vs Renewable Energy Adoption ({gdp_year})",fontsize=14,weight="bold") 
+    ax.set_xlabel("GDP per capita (log scale, current international $)") 
+    ax.set_ylabel("Renewable share of primary energy (%)") 
+    ax.xaxis.set_major_formatter(mticker.FuncFormatter( lambda x,_:f"${x:,.0f}")) 
+    
+    # label a few notable countries
+    highlight  = ["China","United States","Iceland","Norway","India","Germany","United Kingdom","Brazil","Nigeria","Saudi Arabia","Sweden"] 
+    for _,row  in snap[snap["country"].isin(highlight)].iterrows()  :
+        ax.annotate(row["country"],(row["gdp_per_capita"],row["renewables_share_energy"]),fontsize=8,xytext=(5,5),textcoords="offset points") 
+    fig.tight_layout() 
+    plt.show() 
+    if WRITE_PNG  :
+        print("Writing image file...") 
+        fig.savefig(f"5_gdp_vs_renewables.png",dpi=150) 
+    plt.close(fig) 
+#(=> FrameState:FoldToHeader
+def solar_vs_wind ( ) :
+    '''Solar vs Wind growth race among top economies'''
+    clear_console() 
+    print("Comparing the growth of solar vs wind energy in the top 6 economies.") 
+    top_economies  = ["China","United States","Germany","India","United Kingdom","Brazil"] 
+    fig,axes  = plt.subplots(1,2,figsize=(13,6),sharey=False) 
+    for country  in top_economies  :
+        d  = countries[countries["country"] == country].sort_values("year") 
+        axes[0].plot(d["year"],d["solar_electricity"],label=country,linewidth=2) 
+        axes[1].plot(d["year"],d["wind_electricity"],label=country,linewidth=2) 
+    
+    axes[0].set_title("Solar Electricity Generation",fontsize=12,weight="bold") 
+    axes[1].set_title("Wind Electricity Generation",fontsize=12,weight="bold") 
+    for ax  in axes  :
+        ax.set_xlabel("Year") 
+        ax.set_ylabel("Electricity generation (TWh)") 
+    axes[0].legend(fontsize=8) 
+    fig.suptitle("Solar vs Wind: The Growth Race Among Major Economies",fontsize=14,weight="bold") 
+    fig.tight_layout() 
+    plt.show() 
+    if WRITE_PNG  :
+        print("Writing image file...") 
+        fig.savefig(f"6_solar_vs_wind_race.png",dpi=150) 
+    plt.close(fig) 
+#(=> Section:Main
+#Set the following to True to also generate PNG image files (they will be saved to the project folder)
+WRITE_PNG  = False 
+
+# Load & clean data
+DATA_FILE  = "/data/renewable_energy_share_2000_2025.csv" 
+df  = pd.read_csv(DATA_FILE) 
+# Keep only real countries (proper 3-letter ISO code) - drops regions/aggregates
+# like "Africa", "ASEAN (Ember)", "World", income groups, etc.
+countries  = df[df["iso_code"].notna() & (df["iso_code"].str.len() == 3)].copy() 
+# Keep the World aggregate separately for global trend lines
+world  = df[df["country"] == "World"].copy() 
+
+#Define style and colours for the plots
+plt.style.use("seaborn-v0_8-whitegrid") 
+COLORS  = {"solar":"#f4b400","wind":"#4285f4","hydro":"#00acc1","nuclear":"#8e24aa","coal":"#5d4037","gas":"#e57373","oil":"#37474f","renew":"#2e7d32"} 
+#Set interactive mode on
+plt.ion() 
+
+global_share() 
+input("Press <RETURN> to continue") 
+top_countries() 
+input("Press <RETURN> to continue") 
+elecricity_mix() 
+input("Press <RETURN> to continue") 
+biggest_movers() 
+input("Press <RETURN> to continue") 
+energy_vs_GDP() 
+input("Press <RETURN> to continue") 
+solar_vs_wind() 
+
+print("Done.") 
+#(=> Section:End
