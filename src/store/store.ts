@@ -3,7 +3,7 @@ import { FrameObject, CollapsedState, CurrentFrame, CaretPosition, FrozenState, 
 import { getObjectPropertiesDifferences } from "@/helpers/common";
 import { loadPinnedLocalFiles, pinnedLocalFilesStateKey, savePinnedLocalFiles } from "@/helpers/load-save";
 import i18n from "@/i18n";
-import {calculateNextCollapseState, checkCodeErrors, checkStateDataIntegrity, evaluateSlotType, filterAllowedJointChildrenAfter, generateFlatSlotBases, getAllChildrenAndJointFramesIds, getAvailableNavigationPositions, getFlatNeighbourFieldSlotInfos, getFrameSectionIdFromFrameId, getParentOrJointParent, getSlotDefFromInfos, getSlotIdFromParentIdAndIndexSplit, getSlotParentIdAndIndexSplit, isAncestorGatedFrameTypeAllowed, isFramePartOfJointStructure, removeFrameInFrameList, restoreSavedStateFrameTypes, retrieveSlotByPredicate, retrieveSlotFromSlotInfos} from "@/helpers/storeMethods";
+import {calculateNextCollapseState, checkCodeErrors, checkStateDataIntegrity, evaluateSlotType, filterAllowedJointChildrenAfter, generateFlatSlotBases, getAllChildrenAndJointFramesIds, getAvailableNavigationPositions, getFlatNeighbourFieldSlotInfos, getFrameSectionIdFromFrameId, getNextFrameCaretPosition, getParentOrJointParent, getSlotDefFromInfos, getSlotIdFromParentIdAndIndexSplit, getSlotParentIdAndIndexSplit, isAncestorGatedFrameTypeAllowed, isFramePartOfJointStructure, removeFrameInFrameList, restoreSavedStateFrameTypes, retrieveSlotByPredicate, retrieveSlotFromSlotInfos} from "@/helpers/storeMethods";
 import { AppPlatform, AppVersion, eventBus, projectDocumentationFrameId } from "@/helpers/appContext";
 import initialStates from "@/store/initial-states";
 import { defineStore } from "pinia";
@@ -915,14 +915,12 @@ export const useStore = defineStore("app", {
 
             const currentCaret: CurrentFrame = {id: currId, caretPosition: currPosition};
             const availablePositions = getAvailableNavigationPositions();
-            const listOfCaretPositions = availablePositions.filter(((e)=> !e.isSlotNavigationPosition));
-            // Where is the current in the list
-            const currentCaretIndex = listOfCaretPositions.findIndex((e) => e.frameId===currentCaret.id && e.caretPosition === currentCaret.caretPosition);
-
             const delta = (key === "ArrowDown") ? 1 : -1;
-            // Next caret position is a +/- 1 offset position if we are simply moving the caret, or up/down to the next same level caret position if we are navigating at level scope
-            let nextCaretPosition = currentCaretIndex + delta;
+            let nextCaret: CurrentFrame | undefined;
             if(isLevelScopeChange){
+                const listOfCaretPositions = availablePositions.filter(((e)=> !e.isSlotNavigationPosition));
+                const currentCaretIndex = listOfCaretPositions.findIndex((e) => e.frameId===currentCaret.id && e.caretPosition === currentCaret.caretPosition);
+                let nextCaretPosition = currentCaretIndex + delta;
                 // To find the neighbour frame at level scope, we look into the current's frame parent: if there is an availble neighbour there, we retrieve its position, otherwise
                 // we stay were we are. If the previous position would be index -1 (as 0 minus 1), the position we look for the is the parent's body.
                 if(currPosition == CaretPosition.body){
@@ -941,10 +939,14 @@ export const useStore = defineStore("app", {
                         ? listOfCaretPositions.findIndex((caretPos) =>  caretPos.frameId==childrenIds[neigbourFrameChildIndex] && caretPos.caretPosition == CaretPosition.below)
                         : ((neigbourFrameChildIndex==-1) ? listOfCaretPositions.findIndex((caretPos) =>  caretPos.frameId==parentId && caretPos.caretPosition == CaretPosition.body) : currentCaretIndex);
                 }
+                const nextPosition = listOfCaretPositions[nextCaretPosition];
+                nextCaret = nextPosition?.caretPosition
+                    ? {id: nextPosition.frameId, caretPosition: nextPosition.caretPosition}
+                    : currentCaret;
             }
-            const nextCaret = (listOfCaretPositions[nextCaretPosition]) 
-                ? ({id: listOfCaretPositions[nextCaretPosition].frameId, caretPosition: listOfCaretPositions[nextCaretPosition].caretPosition}) as CurrentFrame
-                : currentCaret;
+            else {
+                nextCaret = getNextFrameCaretPosition(currentCaret, delta > 0 ? "down" : "up", availablePositions) ?? currentCaret;
+            }
 
             this.currentFrame.id = nextCaret.id;
             this.currentFrame.caretPosition = nextCaret.caretPosition;

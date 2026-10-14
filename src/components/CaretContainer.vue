@@ -23,6 +23,7 @@
                 autocapitalize="off"
                 spellcheck="false"
                 inputmode="none"
+                :aria-label="accessibleLabel"
                 @input="clearFocusInputContent"
             />
         </div>
@@ -53,20 +54,59 @@
 import { defineComponent, PropType } from "vue";
 import { useStore } from "@/store/store";
 import Caret from"@/components/Caret.vue";
-import {AllFrameTypesIdentifier, CaretPosition, Position, PythonExecRunningState, FrameContextMenuActionName, CollapsedState, StrypeContextMenuItem, CoordPosition} from "@/types/types";
-import { getCaretUID, setContextMenuEventClientXY, getAddFrameCmdElementUID, CustomEventTypes, getCaretContainerUID, getCaretContainerFocusInputUID, getEditorMiddleUID } from "@/helpers/editor";
+import {AllFrameTypesIdentifier, AllowedSlotContent, CaretPosition, Position, PythonExecRunningState, CollapsedState, StrypeContextMenuItem, CoordPosition, FrameObject, FrozenState, SlotType} from "@/types/types";
+import { getCaretUID, setContextMenuEventClientXY, getAddFrameCmdElementUID, CustomEventTypes, getCaretContainerUID, getCaretContainerFocusInputUID, getEditorMiddleUID, slotStructureParserToString } from "@/helpers/editor";
 import { mapStores } from "pinia";
 import { cloneDeep } from "lodash";
 import { pasteMixedPython } from "@/helpers/pythonToFrames";
 import scssVars  from "@/assets/style/_export.module.scss";
 import { vueComponentsAPIHandler } from "@/helpers/vueComponentAPI";
-import { getAboveFrameCaretPosition } from "@/helpers/storeMethods";
+import { getAboveFrameCaretPosition, getNextFrameCaretPosition, getParentOrJointParent } from "@/helpers/storeMethods";
 // #v-ifdef STRYPE_PLATFORM == VITE_STANDARD_PYTHON_MODE
-import { getFrameDefType, SlotType, MediaDataAndDim} from "@/types/types";
+import { getFrameDefType, MediaDataAndDim} from "@/types/types";
 import { getFrameLabelSlotsStructureUID, getLabelSlotUID } from "@/helpers/editor";
 import { preparePasteMediaData } from "@/helpers/media";
-import { getParentOrJointParent } from "@/helpers/storeMethods";
 // #v-endif
+
+const scopeFrameTypes = [
+    AllFrameTypesIdentifier.if,
+    AllFrameTypesIdentifier.elif,
+    AllFrameTypesIdentifier.else,
+    AllFrameTypesIdentifier.for,
+    AllFrameTypesIdentifier.while,
+    AllFrameTypesIdentifier.try,
+    AllFrameTypesIdentifier.except,
+    AllFrameTypesIdentifier.finally,
+    AllFrameTypesIdentifier.with,
+    AllFrameTypesIdentifier.match,
+    AllFrameTypesIdentifier.case,
+    AllFrameTypesIdentifier.classdef,
+    AllFrameTypesIdentifier.funcdef,
+];
+
+function getFrameCodeDescription(frame: FrameObject, mediaDescription: string): string {
+    return (frame.frameType.labels ?? []).map((label, index) => {
+        if (frame.labelSlotsDict[index]?.shown === false || label.allowedSlotContent === AllowedSlotContent.FREE_TEXT_DOCUMENTATION) {
+            return "";
+        }
+
+        const labelText = label.showLabel === false ? "" : label.label
+            // Replace HTML tags with spaces so adjacent words stay separate.
+            .replace(/<[^>]*>/g, " ")
+            // Convert non-breaking spaces to regular spaces.
+            .replace(/&nbsp;/g, " ")
+            // Decode hexadecimal HTML character references into unicode strings,
+            // i.e. &#x21D0; becomes ⇐.
+            .replace(/&#x([0-9a-f]+);/gi, (_match, codePoint: string) => String.fromCodePoint(parseInt(codePoint, 16)));
+        const slotStructure = frame.labelSlotsDict[index]?.slotStructures;
+        const slotText = slotStructure
+            ? slotStructureParserToString(slotStructure, {slotTypeRepacerMap: {[SlotType.media]: mediaDescription}}).join("").trim()
+            : "";
+        const content = label.showSlots === false ? "" : (slotText || label.defaultText);
+        return labelText + content;
+    // Collapse whitespace from joined labels and slots, then remove leading/trailing space.
+    }).join("").replace(/\s+/g, " ").trim();
+}
 
 //////////////////////
 //     Component    //
@@ -120,8 +160,21 @@ export default defineComponent({
         isFrameDisabled: Boolean,
     },
 
+    watch: {
+        currentCaretPositionKey: {
+            handler() {
+                this.updateAccessibleLabel();
+            },
+            flush: "post",
+        },
+    },
+
     computed: {
         ...mapStores(useStore),
+
+        currentCaretPositionKey(): string {
+            return `${this.appStore.currentFrame.id}:${this.appStore.currentFrame.caretPosition}`;
+        },
         
         isEditing(): boolean {
             return this.appStore.isEditing;
@@ -174,10 +227,6 @@ export default defineComponent({
             return (this.appStore.pythonExecRunningState ?? PythonExecRunningState.NotRunning) != PythonExecRunningState.NotRunning;
         },
 
-        pasteMenuActionName(): FrameContextMenuActionName {
-            return FrameContextMenuActionName.paste;
-        },
-
         isCaretBlurred(): boolean {
             //if the frame isn't disabled, we never blur the caret. If the frame is disabled, then we check if frames can be added to decide if we blur or not.
             return this.isFrameDisabled && ((this.caretAssignedPosition ===  CaretPosition.below) ? !this.appStore.canAddFrameBelowDisabled(this.frameId) : true);
@@ -196,6 +245,7 @@ export default defineComponent({
             areFramesDraggedOver: false,
             areDropFramesAllowed: true,
             isDuplicateDnDAction: false,
+            accessibleLabel: "",
             // Flag used to trigger the context menu opening
             showContextMenu: false,
             // Prepare an empty version of the menu: it will be updated as required in handleClick()
@@ -207,6 +257,7 @@ export default defineComponent({
     mounted() {
         window.addEventListener("paste", this.pasteIfFocused);
         document.addEventListener(CustomEventTypes.scrollCaretIntoView, this.onScrollCaretIntoView);
+        this.$nextTick(() => this.updateAccessibleLabel());
         // When a frame is added, we need to make sure it will be visible in the view port. This is particularly true
         // when a paste or duplicate action is performed.
         this.putCaretContainerInView(true);
@@ -222,6 +273,10 @@ export default defineComponent({
     },
     
     methods: {
+        updateAccessibleLabel() {
+            this.accessibleLabel = this.computeAccessibleLabel();
+        },
+
         // Scrolls the frame cursor into view if it's not fully inside the editor's scrolling area. If
         // "delay" is true we wait a bit for the UI to be ready first (needed when a frame has just been
         // added); for plain cursor navigation the caret's element is already in place, and delaying
@@ -412,6 +467,101 @@ export default defineComponent({
                     setTimeout(() => document.getElementById(getAddFrameCmdElementUID(addFrameCmdDef[0].type.type))?.click(), 250);
                 }});
             });
+        },
+
+        computeAccessibleLabel(): string {
+            const currentFrame = this.appStore.frameObjects[this.frameId];
+            let navigationPosition = this.caretAssignedPosition;
+            if (navigationPosition === CaretPosition.body
+                && (currentFrame.frameType.type === AllFrameTypesIdentifier.classdef || currentFrame.frameType.type === AllFrameTypesIdentifier.funcdef)
+                && (currentFrame.collapsedState ?? CollapsedState.FULLY_VISIBLE) !== CollapsedState.FULLY_VISIBLE) {
+                navigationPosition = CaretPosition.below;
+            }
+
+            let structuralNextFrameId: number | undefined;
+            if (navigationPosition === CaretPosition.body) {
+                structuralNextFrameId = currentFrame.childrenIds.at(0);
+            }
+            else {
+                const parentId = currentFrame.jointParentId > 0 ? currentFrame.jointParentId : currentFrame.parentId;
+                const parent = this.appStore.frameObjects[parentId];
+                const siblings = currentFrame.jointParentId > 0 ? parent.jointFrameIds : parent.childrenIds;
+                const currentSiblingIndex = siblings.indexOf(currentFrame.id);
+                structuralNextFrameId = currentSiblingIndex < 0 ? undefined : siblings[currentSiblingIndex + 1];
+            }
+            const structuralNextFrame = structuralNextFrameId === undefined
+                ? undefined
+                : this.appStore.frameObjects[structuralNextFrameId];
+            const hasPotentialNextFrame = structuralNextFrame !== undefined;
+            const nextFramePotentiallyHasBody = structuralNextFrame !== undefined
+                && structuralNextFrame.frameType.allowChildren
+                && !structuralNextFrame.isDisabled
+                && (structuralNextFrame.collapsedState ?? CollapsedState.FULLY_VISIBLE) === CollapsedState.FULLY_VISIBLE;
+
+            const nextPosition = getNextFrameCaretPosition(
+                {id: this.frameId, caretPosition: this.caretAssignedPosition},
+                "down"
+            );
+            if (!nextPosition) {
+                if (!hasPotentialNextFrame) {
+                    return this.$t("accessibility.noNextFrame");
+                }
+                return nextFramePotentiallyHasBody
+                    ? this.$t("accessibility.nextFrameBody", {description: this.$t("accessibility.genericFrame")})
+                    : this.$t("accessibility.nextFrame", {description: this.$t("accessibility.genericFrame")});
+            }
+
+            const frame = this.appStore.frameObjects[nextPosition.id];
+            if (!frame) {
+                return this.$t("accessibility.noNextFrame");
+            }
+
+            const describeFrame = (frameToDescribe: FrameObject): string => {
+                const codeDescription = getFrameCodeDescription(frameToDescribe, this.$t("accessibility.media"));
+                if (codeDescription) {
+                    return codeDescription;
+                }
+
+                const descriptionKey = `frame.${frameToDescribe.frameType.type}_desc`;
+                return this.$te(descriptionKey)
+                    ? this.$t(descriptionKey)
+                    : this.$t("accessibility.genericFrame");
+            };
+
+            const frameDescription = describeFrame(frame);
+            const description = nextPosition.caretPosition === CaretPosition.body
+                ? this.$t("accessibility.nextFrameBody", {description: frameDescription})
+                : this.$t("accessibility.nextFrame", {description: frameDescription});
+
+            let ancestorId = getParentOrJointParent(frame.id);
+            let scopeDescription = "";
+            let isFrozen = frame.frozenState === FrozenState.FROZEN;
+            while (ancestorId > 0 && this.appStore.frameObjects[ancestorId]) {
+                const ancestor = this.appStore.frameObjects[ancestorId];
+                isFrozen = isFrozen || ancestor.frozenState === FrozenState.FROZEN;
+                if (!scopeDescription && scopeFrameTypes.includes(ancestor.frameType.type)) {
+                    scopeDescription = describeFrame(ancestor);
+                }
+                ancestorId = getParentOrJointParent(ancestor.id);
+            }
+
+            const stateDescriptions: string[] = [];
+            if (isFrozen) {
+                stateDescriptions.push(this.$t("accessibility.frozen"));
+            }
+            if ((frame.collapsedState ?? CollapsedState.FULLY_VISIBLE) === CollapsedState.ONLY_HEADER_VISIBLE) {
+                stateDescriptions.push(this.$t("accessibility.collapsedToHeader"));
+            }
+            else if ((frame.collapsedState ?? CollapsedState.FULLY_VISIBLE) === CollapsedState.HEADER_AND_DOC_VISIBLE) {
+                stateDescriptions.push(this.$t("accessibility.collapsedWithDescription"));
+            }
+
+            const label = [
+                description,
+                ...(scopeDescription ? [this.$t("accessibility.withinScope", {scope: scopeDescription})] : []),
+                ...(stateDescriptions.length ? [this.$t("accessibility.frameState", {states: stateDescriptions.join(", ")})] : []),
+            ].join(". ");
+            return label;
         },
     },
 });

@@ -536,10 +536,12 @@ export function getCaretContainerFocusInputUID(caretPos: CaretPosition, frameId:
 // handleDocumentSelectionChange, wrongly believe the user is editing a text slot. So we always clear the
 // selection right after focusing this input.
 export function focusCaretContainerInput(caretPos: CaretPosition, frameId: number): void {
-    // preventScroll avoids the browser's own native scroll-into-view on focus; scrolling is handled
-    // deliberately by callers via scrollCaretIntoView.
-    document.getElementById(getCaretContainerFocusInputUID(caretPos, frameId))?.focus({preventScroll: true});
-    document.getSelection()?.removeAllRanges();
+    nextTick(() => {
+        // Wait for the caret DOM and its accessible label to update before moving focus.
+        // preventScroll avoids native scrolling; callers handle it via scrollCaretIntoView.
+        document.getElementById(getCaretContainerFocusInputUID(caretPos, frameId))?.focus({preventScroll: true});
+        document.getSelection()?.removeAllRanges();
+    });
 }
 
 const caretContainerFocusInputUIDRegex = /caret_(.+)_of_frame_(-?\d*)_focusInput/;

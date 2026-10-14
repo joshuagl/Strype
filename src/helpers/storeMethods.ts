@@ -1021,6 +1021,28 @@ export const getAvailableNavigationPositions = function(showIsInCollapsedFrameCo
     }).filter((navigationPosition) => useStore().frameObjects[navigationPosition.frameId] && !(navigationPosition.isSlotNavigationPosition && useStore().frameObjects[navigationPosition.frameId].isDisabled)) as NavigationPosition[]; 
 };
 
+export const getNextFrameCaretPosition = (currentFrame: CurrentFrame, direction: "up" | "down", availablePositions?: NavigationPosition[]): CurrentFrame | undefined => {
+    const frame = useStore().frameObjects[currentFrame.id];
+    let caretPosition = currentFrame.caretPosition;
+    if (caretPosition === CaretPosition.body
+        && (frame.frameType.type === AllFrameTypesIdentifier.classdef || frame.frameType.type === AllFrameTypesIdentifier.funcdef)
+        && (frame.collapsedState ?? CollapsedState.FULLY_VISIBLE) !== CollapsedState.FULLY_VISIBLE) {
+        caretPosition = CaretPosition.below;
+    }
+
+    const frameCaretPositions = (availablePositions ?? getAvailableNavigationPositions())
+        .filter((position) => !position.isSlotNavigationPosition);
+    const currentIndex = frameCaretPositions.findIndex((position) => position.frameId === currentFrame.id && position.caretPosition === caretPosition);
+    if (currentIndex < 0) {
+        return undefined;
+    }
+
+    const nextPosition = frameCaretPositions[currentIndex + (direction === "down" ? 1 : -1)];
+    return nextPosition?.caretPosition
+        ? {id: nextPosition.frameId, caretPosition: nextPosition.caretPosition}
+        : undefined;
+};
+
 const getPrecompiledErrorFrameId = (frameId: number): string => {
     return "precompilederr_" + frameId;
 };

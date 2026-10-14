@@ -34,6 +34,18 @@
     "blank_desc": "blank line",
     "comment_desc": "comment"
   },
+  "accessibility": {
+    "nextFrame": "Next frame: {description}",
+    "nextFrameBody": "Next position: body of {description}",
+    "withinScope": "within {scope}",
+    "frameState": "State: {states}",
+    "frozen": "frozen",
+    "collapsedToHeader": "collapsed to the header only",
+    "collapsedWithDescription": "collapsed to the header and description",
+    "genericFrame": "frame",
+    "media": "media",
+    "noNextFrame": "No frame below"
+  },
   "messageBannerMessage": {
     "noUndo": "There is no undo action available.",
     "noRedo": "There is no redo action available.",
