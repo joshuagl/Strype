@@ -1,7 +1,7 @@
 <template>
     <!-- With the new package for Bootstrap (for Vue 3), BApp must wrap the application content -->
     <BApp>
-        <div @mousedown.capture="onAppMouseDownCapture" role="application">
+        <div @mousedown.capture="onAppMouseDownCapture" role="application" tabindex="0">
             <div v-if="showAppProgress || setAppNotOnTop" :class="{'app-overlay-pane': true, 'app-overlay-pane-absolute': showAppProgress, 'app-progress-pane': showAppProgress}" @contextmenu="handleOverlayRightClick">
                 <div v-if="showAppProgress" class="app-progress-container">
                     <div class="progress">
@@ -783,6 +783,18 @@ export default defineComponent({
     mounted() {
         // Register the callback needed by the Settings store
         this.settingsStore.saveSettingInLocalStorageHandler = this.autoSaveStateToWebLocalStorage;
+
+        const focusApplication = () => {
+            if (document.activeElement === document.body) {
+                document.querySelector<HTMLElement>('[role="application"]')?.focus();
+            }
+        };
+        if (document.readyState === "complete") {
+            focusApplication();
+        }
+        else {
+            window.addEventListener("load", focusApplication, {once: true});
+        }
 
         // When the App is ready, we want to either open a project present in the local storage,
         // or open a shared project that is given by the URL (this takes priority over local storage).
