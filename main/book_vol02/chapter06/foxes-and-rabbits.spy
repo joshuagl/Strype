@@ -90,9 +90,7 @@ class Field  :
         '''Remove an animal from the field.'''
         if self.grid[animal.row][animal.col] is animal  :
             self.grid[animal.row][animal.col]  = None 
-        if animal.get_x() is not None  :
-            #the check above can be removed once 'remove()' is more forgiving
-            animal.remove() 
+        animal.remove() 
     #(=> FrameState:FoldToHeader
     def is_empty (self,col,row ) :
         '''Return True if nothing is in the given cell.'''
@@ -382,5 +380,6 @@ class Fox(Animal)  :
 field  = Field() 
 while True  :
     field.step() 
+    sync_graphics() 
     pace(30) 
 #(=> Section:End
