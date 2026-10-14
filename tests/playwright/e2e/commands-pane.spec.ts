@@ -24,6 +24,12 @@ test.describe("Frame commands pane -- frame cursor", () => {
         await expect(page.locator("#addFrameCmd_else")).toHaveCount(0);
     });
 
+    test("announces the type of frame inserted", async ({page}) => {
+        await pressFrameShortcut(page, "i");
+
+        await expect(page.getByRole("status").first()).toHaveText("Inserted frame type: if");
+    });
+
     test("shows elif/else once positioned after an if frame", async ({page}) => {
         await pressFrameShortcut(page, "i");
         await waitForEditorSettled(page);

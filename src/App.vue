@@ -1,6 +1,7 @@
 <template>
     <!-- With the new package for Bootstrap (for Vue 3), BApp must wrap the application content -->
     <BApp>
+        <div class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{frameActionAnnouncement}}</div>
         <div @mousedown.capture="onAppMouseDownCapture" role="application" tabindex="0">
             <div v-if="showAppProgress || setAppNotOnTop" :class="{'app-overlay-pane': true, 'app-overlay-pane-absolute': showAppProgress, 'app-progress-pane': showAppProgress}" @contextmenu="handleOverlayRightClick">
                 <div v-if="showAppProgress" class="app-progress-container">
@@ -157,7 +158,7 @@ import axios from "axios";
 import scssVars from "@/assets/style/_export.module.scss";
 import {loadDivider, loadPinnedLocalFiles} from "@/helpers/load-save";
 import FrameHeader from "@/components/FrameHeader.vue";
-import { eventBus, projectDocumentationFrameId } from "@/helpers/appContext";
+import { eventBus, FrameActionAnnouncement, projectDocumentationFrameId } from "@/helpers/appContext";
 import {inflateRaw} from "pako";
 import { Base64 } from "js-base64";
 import { BvTriggerableEvent } from "bootstrap-vue-next";
@@ -238,6 +239,7 @@ export default defineComponent({
             // strypeModalHidden listener chain:
             isRecordingMediaFlowActive: false,
             colourPickerInitialColour: null as string | null,
+            frameActionAnnouncement: "",
         };
     },
 
@@ -770,6 +772,7 @@ export default defineComponent({
 
         // The events from Bootstrap modal are registered on the eventBus
         eventBus.on(CustomEventTypes.strypeModalHidden, this.onHideModalDlg);  
+        eventBus.on("frameActionAnnouncement", this.onFrameActionAnnouncement);
     },
 
     unmounted() {
@@ -778,6 +781,7 @@ export default defineComponent({
         document.removeEventListener("mouseup", this.checkMouseSelection);
         document.removeEventListener("wheel", this.blockScrollOnContextMenu);
         eventBus.off(CustomEventTypes.strypeModalHidden, this.onHideModalDlg);  
+        eventBus.off("frameActionAnnouncement", this.onFrameActionAnnouncement);
     },
 
     mounted() {
@@ -786,7 +790,7 @@ export default defineComponent({
 
         const focusApplication = () => {
             if (document.activeElement === document.body) {
-                document.querySelector<HTMLElement>('[role="application"]')?.focus();
+                document.querySelector<HTMLElement>("[role=\"application\"]")?.focus();
             }
         };
         if (document.readyState === "complete") {
@@ -985,6 +989,21 @@ export default defineComponent({
 
     methods: {
         getFrameHeaderUID,
+        onFrameActionAnnouncement(announcement: FrameActionAnnouncement) {
+            this.frameActionAnnouncement = "";
+            this.$nextTick(() => {
+                if (announcement.action === "inserted" && announcement.frameType) {
+                    const descriptionKey = `frame.${announcement.frameType}_desc`;
+                    const frameType = this.$te(descriptionKey)
+                        ? this.$t(descriptionKey)
+                        : announcement.frameType;
+                    this.frameActionAnnouncement = this.$t("accessibility.frameActions.insertedWithType", {frameType});
+                }
+                else {
+                    this.frameActionAnnouncement = this.$t(`accessibility.frameActions.${announcement.action}`, {count: announcement.count});
+                }
+            });
+        },
         setAutoSaveState() {
             // The autosave is only performed on the webstore
             autoSaveTimerId = window.setInterval(() => {

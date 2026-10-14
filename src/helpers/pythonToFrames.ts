@@ -4,7 +4,7 @@ import {checkCodeErrors} from "@/helpers/storeMethods";
 import {CustomEventTypes, getLastCaretPosInsideParent} from "@/helpers/editor";
 import i18n from "@/i18n";
 import {cloneDeep, escapeRegExp} from "lodash";
-import {AppName, AppSPYFullPrefix, eventBus, projectDocumentationFrameId} from "@/helpers/appContext";
+import {announceFrameAction, AppName, AppSPYFullPrefix, eventBus, projectDocumentationFrameId} from "@/helpers/appContext";
 import {stringToCollapsed, stringToFrozen} from "@/parser/parser";
 import {nextTick} from "vue";
 import type Parser from "web-tree-sitter";
@@ -1335,7 +1335,7 @@ function splitLinesToSections(allLines : string[], leadingAssignmentsGoInDefs: b
 }
 
 // Returns headers if successful, or null if there was an error (which will already have been shown in the UI)
-export function pasteMixedPython(completeSource: string, at: CurrentFrame, clearExisting: boolean = false, dontSetCaretAfter: boolean = false, ignoreStateBackup: boolean = false) : { headers: Record<string, string> } | null {
+export function pasteMixedPython(completeSource: string, at: CurrentFrame, clearExisting: boolean = false, dontSetCaretAfter: boolean = false, ignoreStateBackup: boolean = false, announcementAction: "pasted" | "duplicated" | false = "pasted") : { headers: Record<string, string> } | null {
     const allLines = completeSource.split(/\r?\n/);
     // Split can make an extra blank line at the end which we don't want:
     if (allLines.length > 0 && allLines[allLines.length - 1] === "") {
@@ -1494,6 +1494,9 @@ export function pasteMixedPython(completeSource: string, at: CurrentFrame, clear
         Object.keys(funcDefFrames.frames),
         Object.keys(mainFrames.frames),
     ].flat().map(Number);
+    if (!clearExisting && framesAdded.length > 0 && announcementAction) {
+        announceFrameAction(announcementAction, framesAdded.length);
+    }
     void nextTick(() => {
         eventBus.emit(CustomEventTypes.updateParamPrompts, framesAdded);
         // One call for all the frames: the whole-project TigerPython pass in checkCodeErrors() is expensive,
@@ -1530,4 +1533,3 @@ const transformTripleQuotesStrings = (slots: {[index: number]: LabelSlotsContent
     };
     Object.values(slots).forEach((slotsStruct) => doTransformTripleQuotesStringsOnSlotStructs(slotsStruct.slotStructures));
 };
-

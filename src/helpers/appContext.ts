@@ -9,6 +9,17 @@ import mitt from "mitt";
 // As Vue 3 doesn't support $on, $off and $once anymore, we use the mitt package instead for the application event bus
 export const eventBus = mitt<Record<string, any>>();
 
+export type FrameAction = "inserted" | "deleted" | "moved" | "copied" | "pasted" | "cut" | "duplicated";
+export type FrameActionAnnouncement = {action: FrameAction; count: number; frameType?: string};
+
+export function announceFrameAction(action: FrameAction, count: number, frameType?: string): void {
+    const announcement: FrameActionAnnouncement = {action, count};
+    if (frameType) {
+        announcement.frameType = frameType;
+    }
+    eventBus.emit("frameActionAnnouncement", announcement);
+}
+
 // Version of the application to check code's import compatibility in the editor
 // note: that is not an offical software version of Strype, just a way to help us dealing with compatibility issues.
 // it MUST be kept as an integer matching value

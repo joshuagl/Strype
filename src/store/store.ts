@@ -4,7 +4,7 @@ import { getObjectPropertiesDifferences } from "@/helpers/common";
 import { loadPinnedLocalFiles, pinnedLocalFilesStateKey, savePinnedLocalFiles } from "@/helpers/load-save";
 import i18n from "@/i18n";
 import {calculateNextCollapseState, checkCodeErrors, checkStateDataIntegrity, evaluateSlotType, filterAllowedJointChildrenAfter, generateFlatSlotBases, getAllChildrenAndJointFramesIds, getAvailableNavigationPositions, getFlatNeighbourFieldSlotInfos, getFrameSectionIdFromFrameId, getNextFrameCaretPosition, getParentOrJointParent, getSlotDefFromInfos, getSlotIdFromParentIdAndIndexSplit, getSlotParentIdAndIndexSplit, isAncestorGatedFrameTypeAllowed, isFramePartOfJointStructure, removeFrameInFrameList, restoreSavedStateFrameTypes, retrieveSlotByPredicate, retrieveSlotFromSlotInfos} from "@/helpers/storeMethods";
-import { AppPlatform, AppVersion, eventBus, projectDocumentationFrameId } from "@/helpers/appContext";
+import { announceFrameAction, AppPlatform, AppVersion, eventBus, projectDocumentationFrameId } from "@/helpers/appContext";
 import initialStates from "@/store/initial-states";
 import { defineStore } from "pinia";
 import { bumpCaretRequestSeq, CustomEventTypes, generateAllFrameCommandsDefs, getAddCommandsDefs, getFocusedEditableSlotTextSelectionStartEnd, getLabelSlotUID, isLabelSlotEditable, setDocumentSelection, parseCodeLiteral, undoMaxSteps, getSelectionCursorsComparisonValue, getFrameHeaderUID, getImportDiffVersionModalDlgId, checkEditorCodeErrors, countEditorCodeErrors, getCaretUID, getCaretContainerUID, focusCaretContainerInput, AutoSaveKeyNames, isFullyInViewport, copyFrameTextReadyForClipboard, waitForElementId } from "@/helpers/editor";
@@ -1767,6 +1767,7 @@ export const useStore = defineStore("app", {
 
                 //clear the stateBeforeChanges flag off
                 this.updateStateBeforeChanges(true);
+                announceFrameAction("moved", draggedFramesReversed.length);
             });
         },
 
@@ -2012,6 +2013,7 @@ export const useStore = defineStore("app", {
             // Add the new frame to the list
             // "Vue.set" is used as Vue cannot catch the change by doing : state.frameObjects[fobj.id] = fobj
             this.frameObjects[newFrame.id] = newFrame;
+            announceFrameAction("inserted", 1, frame.type);
         
             // As the new frame isn't yet added to the DOM, we need a list to store its navigational positions,
             // which will then be merged to the existing caret positions
@@ -2044,13 +2046,13 @@ export const useStore = defineStore("app", {
                 this.isWrappingFrame = true;
                 const text = copyFrameTextReadyForClipboard(this.selectedFrames);
                 // For deleting a selection, we don't care if we simulate "delete" or "backspace" as they behave the same
-                this.deleteFrames("Delete", true);
+                this.deleteFrames("Delete", true, false);
                 // The general rule is to copy the wrapped frame inside the wrapper's body,
                 // one exception: for match frames, we don't wrap the content inside the match frame body but inside it's case child frame body.
                 pasteMixedPython(text, {
                     id: (newFrame.frameType.type == AllFrameTypesIdentifier.match) ? newFrame.childrenIds[0] : newFrame.id,
                     caretPosition: CaretPosition.body,
-                }, false, true);
+                }, false, true, false, false);
                 // Find the frame before, if any:
                 const index = this.getIndexInParent(newFrame.id);
                 if (index == 0) {
@@ -2138,7 +2140,7 @@ export const useStore = defineStore("app", {
 
         // Note: this will not always do the delete, for example if frozen frames are involved
         // Returns true if the deletion ocurred or false if it did not.
-        deleteFrames(key: string, ignoreBackState?: boolean) : boolean {
+        deleteFrames(key: string, ignoreBackState?: boolean, announcementAction: "deleted" | "cut" | false = "deleted") : boolean {
             // If we are trying to delete a case frame from its body, the action is cancelled if this body isn't empty-like (i.e. if not empty, or only containing comments/blanks): 
             // catch statements cannot live outside a match statement and match statements cannot contain anything but cases or comments/blanks
             if(this.selectedFrames.length == 0 && key == "Backspace" && this.currentFrame.caretPosition == CaretPosition.body 
@@ -2148,6 +2150,7 @@ export const useStore = defineStore("app", {
                 return false;
             }
 
+            const frameCountBeforeDelete = Object.keys(this.frameObjects).length;
             const stateBeforeChanges = cloneDeep(this.$state);
             
             // we remove the editable slots from the available positions
@@ -2303,6 +2306,11 @@ export const useStore = defineStore("app", {
             if(!ignoreBackState){
                 this.saveStateChanges(stateBeforeChanges);
             }
+
+            const deletedFrameCount = frameCountBeforeDelete - Object.keys(this.frameObjects).length;
+            if (deletedFrameCount > 0 && announcementAction) {
+                announceFrameAction(announcementAction, deletedFrameCount);
+            }
             
             return true;
         },
@@ -2323,6 +2331,7 @@ export const useStore = defineStore("app", {
             // Delete the outer frame(s), the frameId argument only makes sense for deletion without multi-selection
             // We delete outer frame(s) by getting inside each body, and performing a standard "backspace" delete
            
+            const frameCountBeforeDelete = Object.keys(this.frameObjects).length;
             const stateBeforeChanges = cloneDeep(this.$state);
 
             // Prepare a list of ids for the frame to delete
@@ -2340,7 +2349,7 @@ export const useStore = defineStore("app", {
                 this.toggleCaret({id: topLevelFrameId, caretPosition: CaretPosition.body});
 
                 //then send a delete command
-                this.deleteFrames("Backspace", true);
+                this.deleteFrames("Backspace", true, false);
             });
 
             //clear the selection of frames
@@ -2348,6 +2357,11 @@ export const useStore = defineStore("app", {
                                 
             //save state changes
             this.saveStateChanges(stateBeforeChanges);
+
+            const deletedFrameCount = frameCountBeforeDelete - Object.keys(this.frameObjects).length;
+            if(deletedFrameCount > 0) {
+                announceFrameAction("deleted", deletedFrameCount);
+            }
         },
 
         toggleCaret(newCurrent: CurrentFrame) {

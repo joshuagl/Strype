@@ -44,7 +44,17 @@
     "collapsedWithDescription": "collapsed to the header and description",
     "genericFrame": "frame",
     "media": "media",
-    "noNextFrame": "No frame below"
+    "noNextFrame": "No frame below",
+    "frameActions": {
+      "inserted": "Frames inserted: {count}",
+      "insertedWithType": "Inserted frame type: {frameType}",
+      "deleted": "Frames deleted: {count}",
+      "moved": "Frames moved: {count}",
+      "copied": "Frames copied: {count}",
+      "pasted": "Frames pasted: {count}",
+      "cut": "Frames cut: {count}",
+      "duplicated": "Frames duplicated: {count}"
+    }
   },
   "messageBannerMessage": {
     "noUndo": "There is no undo action available.",

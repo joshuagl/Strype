@@ -104,6 +104,7 @@ import { AllFrameTypesIdentifier, CaretPosition, CollapsedState, ContainerTypesI
 import { calculateNextCollapseState, frameOrChildHasErrors, getAboveFrameCaretPosition, getAllChildrenAndJointFramesIds, getLastSibling, getNextSibling, getOutmostDisabledAncestorFrameId, getParentOrJointParent, isFramePartOfJointStructure, isLastInParent } from "@/helpers/storeMethods";
 import { copyFramesToClipboard, copyFrameTextReadyForClipboard, CustomEventTypes, getCaretContainerRef, getFrameBodyRef, getFrameBodyUID, getFrameHeaderUID, getFrameLabelSlotsStructureUID, getFrameUID, getHTML2CanvasFramesSelectionCropOptions, getJointFramesRef, isIdAFrameId, notifyDragStarted, parseFrameUID, setContextMenuEventClientXY } from "@/helpers/editor";
 import { pasteMixedPython } from "@/helpers/pythonToFrames";
+import { announceFrameAction } from "@/helpers/appContext";
 import { mapStores } from "pinia";
 import { BPopover, useToggle } from "bootstrap-vue-next";
 import html2canvas from "html2canvas";
@@ -1098,16 +1099,18 @@ export default defineComponent({
             // Essentially: copy, then paste:
             const text = copyFrameTextReadyForClipboard(this.isPartOfSelection ? this.appStore.selectedFrames : [this.frameId]);
             // We need to remember the selection in order to restore it:
-            pasteMixedPython(text, {id: this.isPartOfSelection ? this.appStore.selectedFrames.at(-1) as number : this.frameId, caretPosition: CaretPosition.below}, false, keepSelection ?? false);
+            pasteMixedPython(text, {id: this.isPartOfSelection ? this.appStore.selectedFrames.at(-1) as number : this.frameId, caretPosition: CaretPosition.below}, false, keepSelection ?? false, false, "duplicated");
 
         },
 
         cut(): void {
             // Cut prepares a copy, then we delete the selection / frame copied
-            this.copy();
+            const cutFrameCount = this.isPartOfSelection ? this.appStore.selectedFrames.length : 1;
+            const copySucceeded = this.copy(undefined, false);
+            let cutSucceeded = false;
             if(this.isPartOfSelection){
                 //for deleting a selection, we don't care if we simulate "delete" or "backspace" as they behave the same
-                this.appStore.deleteFrames("Delete");
+                cutSucceeded = this.appStore.deleteFrames("Delete", undefined, false);
             }
             else{
                 // When deleting the specific frame, we usually place the caret below and simulate "backspace".
@@ -1139,15 +1142,28 @@ export default defineComponent({
                 else{
                     this.appStore.setCurrentFrame({id: this.frameId, caretPosition: CaretPosition.below} as CurrentFrame);
                 }
-                this.appStore.deleteFrames(deletionCommand);
+                cutSucceeded = this.appStore.deleteFrames(deletionCommand, undefined, false) || cutSucceeded;
                 for(let i = 0; i < numberOfJoints; i++){
-                    this.appStore.deleteFrames(deletionCommand);
+                    cutSucceeded = this.appStore.deleteFrames(deletionCommand, undefined, false) || cutSucceeded;
                 }
-            }                    
+            }
+            if(cutSucceeded) {
+                void copySucceeded.then((succeeded) => {
+                    if(succeeded) {
+                        announceFrameAction("cut", cutFrameCount);
+                    }
+                });
+            }
         },
 
-        copy(): void {
-            copyFramesToClipboard(this.isPartOfSelection ? this.appStore.selectedFrames : [this.frameId]);
+        copy(_event?: MouseEvent | KeyboardEvent, announce = true): Promise<boolean> {
+            const frameCount = this.isPartOfSelection ? this.appStore.selectedFrames.length : 1;
+            return copyFramesToClipboard(this.isPartOfSelection ? this.appStore.selectedFrames : [this.frameId]).then((succeeded) => {
+                if(announce && succeeded) {
+                    announceFrameAction("copied", frameCount);
+                }
+                return succeeded;
+            });
         },
 
         downloadAsImg(): void {

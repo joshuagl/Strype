@@ -2518,9 +2518,10 @@ export function copyFrameTextReadyForClipboard(frameIds: number[]) : string {
 
 // Must be called in response to click or key handler so that we have access to the clipboard
 // frameIds must refer to contiguous frames (i.e. siblings at same level of the AST)
-export function copyFramesToClipboard(frameIds: number[]) : void {
+export function copyFramesToClipboard(frameIds: number[]) : Promise<boolean> {
     let code = copyFrameTextReadyForClipboard(frameIds);
-    navigator.clipboard.writeText(code).catch((err) => {
+    return navigator.clipboard.writeText(code).then(() => true).catch((err) => {
         console.error(err);
+        return false;
     });
 }
