@@ -3,6 +3,13 @@
         :id="labelSlotsStructDivId"
         :key="refactorCount"
         :contenteditable="!isFrozen ? 'true' : 'false'"
+        :role="autocompleteOpen ? 'combobox' : undefined"
+        :aria-label="autocompleteOpen ? $t('autoCompletion.codeCompletion') : undefined"
+        :aria-expanded="autocompleteOpen ? 'true' : undefined"
+        :aria-haspopup="autocompleteOpen ? 'listbox' : undefined"
+        :aria-autocomplete="autocompleteOpen ? 'list' : undefined"
+        :aria-controls="autocompleteOpen ? autocompleteListboxId : undefined"
+        :aria-activedescendant="autocompleteOpen ? autocompleteActiveDescendant ?? undefined : undefined"
         @keydown.left="onLRKeyDown($event)"
         @keydown.right="onLRKeyDown($event)"
         @keydown.up="slotUpDown($event)"
@@ -35,6 +42,7 @@
                 :isEmphasised="isSlotEmphasised(slotItem)"
                 :operatorPrecedenceTier="slotItem.operatorPrecedenceTier"
                 @requestSlotsRefactoring="checkSlotRefactoring"
+                @autocomplete-state-change="updateAutocompleteState"
             />
     </div>
     <teleport to="body">    
@@ -236,6 +244,9 @@ export default defineComponent({
             // the user has edited things which might affect the slot structure) in order to nudge
             // Vue into re-rendering all items in our loop above.
             refactorCount : 0,
+            autocompleteOpen: false,
+            autocompleteListboxId: "",
+            autocompleteActiveDescendant: null as string | null,
             prependText: "", // This is updated properly in updatePrependText()
             partialIgnoreRefocus: false, // see checkSlotRefactoring() for details
             labelSlotsStructFlatIdentifiersArrayBeforeFocusLoss: [] as string[], // the full label slots structure before that structure loses focus (set when it gets focus)
@@ -328,6 +339,12 @@ export default defineComponent({
     },
 
     methods:{
+        updateAutocompleteState(state: {open: boolean; listboxId: string; activeDescendantId: string | null}): void {
+            this.autocompleteOpen = state.open;
+            this.autocompleteListboxId = state.listboxId;
+            this.autocompleteActiveDescendant = state.open ? state.activeDescendantId : null;
+        },
+
         isEditableSlot(slotType: SlotType): boolean {
             // We check the slot is editable by its characterics; if the user's code is being executed, we just flag it as uneditable.
             return ((this.appStore.pythonExecRunningState ?? PythonExecRunningState.NotRunning) == PythonExecRunningState.NotRunning) && isLabelSlotEditable(slotType);

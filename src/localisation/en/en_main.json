@@ -302,6 +302,20 @@
     "policy": "Privacy policy"
   },
   "autoCompletion": {
+    "accessibleItem": "{name}{kind}{parameters}",
+    "accessibleKinds": {
+      "function": "function",
+      "module": "module",
+      "variable": "variable",
+      "type": "type",
+      "file": "file",
+      "suggestion": "suggestion"
+    },
+    "accessibleTakes": ", takes {parameters}",
+    "accessibleArgument": "argument",
+    "accessibleArguments": "arguments",
+    "accessibleOptional": "optional",
+    "accessibleAnd": "and",
     "myFunctions": "My functions",
     "myVariables": "My variables",
     "myClasses": "My classes",

@@ -4,6 +4,9 @@
         v-show="item || itemHTML"
         :class="{[scssVars.acItemClassName]: true, [scssVars.acItemSelectedClassName]: selected, 'ac-indent-wrapped': indentWrapped}"
         :id="id"
+        :role="isSelectable ? 'option' : undefined"
+        :aria-selected="isSelectable ? selected : undefined"
+        :aria-label="isSelectable ? accessibleLabel : undefined"
         :data-item="item"
         @mouseover="onHover"
         @mousedown.prevent.stop
@@ -32,6 +35,7 @@ export default defineComponent({
             type: String,
             default: "",
         },
+        accessibleLabel: String,
         id: String,
         index: Number,
         selected: Boolean,
@@ -78,4 +82,3 @@ export default defineComponent({
     float: none !important;
 }
 </style>
-

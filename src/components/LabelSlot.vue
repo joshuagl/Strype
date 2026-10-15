@@ -70,6 +70,7 @@
             :id="AC_UID"
             :AC_UID="AC_UID"
             @[CustomEventTypes.acItemClicked]="acItemClicked"
+            @active-descendant-change="updateActiveACDescendant"
         />
     </div>
 </template>
@@ -187,6 +188,7 @@ export default defineComponent({
             // the caret: a big project has thousands of slots and mounting one for each costs seconds on load.
             acActive: false,
             showAC: false,
+            activeACDescendant: null as string | null,
             contextAC: "",
             // tokenAC can be null if code completion is invalid here
             tokenAC: "" as string | null,
@@ -416,6 +418,26 @@ export default defineComponent({
     },
 
     methods: {
+        updateActiveACDescendant(id: string | null): void {
+            this.activeACDescendant = id;
+            this.$emit("autocomplete-state-change", {
+                open: this.showAC,
+                listboxId: `${this.AC_UID}_listbox`,
+                activeDescendantId: id,
+            });
+        },
+
+        notifyAutocompleteState(open: boolean): void {
+            if (!open) {
+                this.activeACDescendant = null;
+            }
+            this.$emit("autocomplete-state-change", {
+                open,
+                listboxId: `${this.AC_UID}_listbox`,
+                activeDescendantId: open ? this.activeACDescendant : null,
+            });
+        },
+
         getSlotContent(): string{
             // If the input span hasn't yet be created, we return an empty string
             if(document.getElementById(this.UID) == null) {
@@ -694,6 +716,8 @@ export default defineComponent({
         },
         
         updateAC() : void {
+            this.activeACDescendant = null;
+            this.notifyAutocompleteState(this.showAC);
             const frame: FrameObject = this.appStore.frameObjects[this.frameId];
             const selectionStart = getFocusedEditableSlotTextSelectionStartEnd(this.UID).selectionStart;
 
@@ -2039,6 +2063,10 @@ export default defineComponent({
             if (isActive) {
                 this.$nextTick(() => this.positionAC());
             }
+        },
+
+        showAC(open: boolean): void {
+            this.notifyAutocompleteState(open);
         },
 
         // Expose this component that other components might need, keyed by its (reactive) UID.

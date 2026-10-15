@@ -5,14 +5,24 @@
                 :style="popupPosition"
                 class="popup"
             >
-                <ul v-show="areResultsToShow()" @wheel="handleScrollHoverConflict" @scroll="handleScrollHoverConflict" @mousemove="handleScrollHoverConflict">
+                <ul
+                    :id="AC_UID + '_listbox'"
+                    role="listbox"
+                    v-show="areResultsToShow()"
+                    @wheel="handleScrollHoverConflict"
+                    @scroll="handleScrollHoverConflict"
+                    @mousemove="handleScrollHoverConflict"
+                >
                     <div 
                         v-for="module in sortCategories(Object.keys(resultsToShow))"
                         :key="UID+module"
                         :data-title="module"
+                        role="group"
+                        :aria-label="module || undefined"
                     >
                         <div 
                             class="ac-module-header"
+                            aria-hidden="true"
                             v-show="module !== ''"
                             @mousedown.prevent.stop
                             @mouseup.prevent.stop
@@ -26,10 +36,11 @@
                             :index="item.index"
                             :item="codeForAC(item)"
                             :itemHTML="htmlForAC(item)"
+                            :accessibleLabel="accessibleLabelForAC(item, module)"
                             :indent-wrapped="true"
                             :key="UID+'_'+item.index"
                             :selected="item.index==selected"
-                            @[CustomEventTypes.acItemClicked]="(e: any) => $emit(CustomEventTypes.acItemClicked, e)"
+                            @[CustomEventTypes.acItemClicked]="(item: string) => $emit(CustomEventTypes.acItemClicked, item)"
                             @[CustomEventTypes.acItemHovered]="handleACItemHover"
                             :isSelectable="true"
                             ref="results"
@@ -131,6 +142,10 @@ const AC_WORD_BREAK_CHARS = "/_-.";
 //////////////////////
 export default defineComponent({
     name: "AutoCompletion",
+    emits: {
+        [CustomEventTypes.acItemClicked]: (item: string) => typeof item === "string",
+        "active-descendant-change": (id: string | null) => id === null || typeof id === "string",
+    },
 
     components: {
         PopUpItem,
@@ -226,6 +241,70 @@ export default defineComponent({
     methods: {
         codeForAC(item: AcResultType) : string {
             return item.acResult + ((this.showFunctionBrackets && item.type.includes("function")) ? "()" : "");
+        },
+        accessibleLabelForAC(item: AcResultType, category: string): string {
+            const kinds: AcResultType["type"][number][] = ["function", "module", "variable", "type"];
+            const kind = kinds.find((candidate) => item.type.includes(candidate));
+            const kindLabel = kind
+                ? this.$t(`autoCompletion.accessibleKinds.${kind}`)
+                : this.$t(category === this.$t("autoCompletion.builtinFiles") || category === this.$t("autoCompletion.yourFiles")
+                    ? "autoCompletion.accessibleKinds.file"
+                    : "autoCompletion.accessibleKinds.suggestion");
+            let parameters = "";
+
+            if (item.type.includes("function")) {
+                let args: {name: string; optional: boolean}[] = [];
+                if (item.signature) {
+                    const signature = item.signature;
+                    args = [
+                        ...signature.positionalOnlyArgs.slice(signature.firstParamIsSelfOrCls ? 1 : 0),
+                        ...signature.positionalOrKeywordArgs,
+                        ...signature.keywordOnlyArgs,
+                    ].map((arg) => ({name: arg.name, optional: arg.defaultValue != null}));
+                    if (signature.varArgs) {
+                        args.push({name: signature.varArgs.name, optional: true});
+                    }
+                    if (signature.varKwargs) {
+                        args.push({name: signature.varKwargs.name, optional: true});
+                    }
+                }
+                else {
+                    args = (item.params ?? [])
+                        .filter((arg) => !arg.hide)
+                        .map((arg) => ({name: arg.name, optional: arg.defaultValue !== undefined}));
+                }
+
+                const formatList = (names: string[]): string => {
+                    if (names.length < 2) {
+                        return names[0] ?? "";
+                    }
+                    if (names.length === 2) {
+                        return `${names[0]} ${this.$t("autoCompletion.accessibleAnd")} ${names[1]}`;
+                    }
+                    return `${names.slice(0, -1).join(", ")}, ${this.$t("autoCompletion.accessibleAnd")} ${names[names.length - 1]}`;
+                };
+
+                const required = args.filter((arg) => !arg.optional);
+                const optional = args.filter((arg) => arg.optional);
+                const requiredDescription = required.length === 1
+                    ? `${required[0].name} ${this.$t("autoCompletion.accessibleArgument")}`
+                    : required.length > 1
+                        ? `${formatList(required.map((arg) => arg.name))} ${this.$t("autoCompletion.accessibleArguments")}`
+                        : "";
+                const optionalDescription = optional.length > 0
+                    ? `${this.$t("autoCompletion.accessibleOptional")} ${formatList(optional.map((arg) => arg.name))}`
+                    : "";
+                const descriptions = [requiredDescription, optionalDescription].filter(Boolean);
+                if (descriptions.length > 0) {
+                    parameters = this.$t("autoCompletion.accessibleTakes", {parameters: descriptions.join(` ${this.$t("autoCompletion.accessibleAnd")} `)});
+                }
+            }
+
+            return this.$t("autoCompletion.accessibleItem", {
+                name: item.acResult,
+                kind: `, ${kindLabel}`,
+                parameters,
+            });
         },
         htmlForAC(item : AcResultType) : string {
             // Note: the autocomplete info can be third-party if libraries are involved, or just from
@@ -551,6 +630,7 @@ export default defineComponent({
                     ?.[0]) ?? ""; // if we have found (we should) the right entry, we get its key value (hence ?.[0]) which is the module, or empty to keep TS happy.
                 this.currentDocumentation = this.getCurrentDocumentation();   
             }
+            this.$emit("active-descendant-change", this.areResultsToShow() ? `${this.UID}_${this.selected}` : null);
         },  
 
         handleScrollHoverConflict(event: Event){
@@ -580,10 +660,15 @@ export default defineComponent({
                 // We retrieve the module with CSS, it is just easier than trying to deduce it from the a/c content!
                 this.currentModule = this.getModuleOfSelected();
                 this.currentDocumentation = this.getCurrentDocumentation();
+                this.$emit("active-descendant-change", `${this.UID}_${this.selected}`);
             }
         },
 
         changeSelection(delta: number): void {
+            if (!this.areResultsToShow()) {
+                return;
+            }
+
             const newSelection = this.selected + delta;
             
             // We need to calculate how many elements in total. Each module has a `subList` which we need to take into account
@@ -596,6 +681,7 @@ export default defineComponent({
 
             this.currentModule = this.getModuleOfSelected(delta);
             this.currentDocumentation = this.getCurrentDocumentation();
+            this.$emit("active-descendant-change", `${this.UID}_${this.selected}`);
 
             // now scroll to the selected view
             const items = this.$el.querySelectorAll("."+scssVars.acPopupItemClassName);            
@@ -772,6 +858,3 @@ export default defineComponent({
 }
 
 </style>
-
-
-
