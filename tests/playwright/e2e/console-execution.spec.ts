@@ -24,6 +24,7 @@ test.describe("Check console after execution", () => {
     test("Check default code works", async ({page}) => {
         await runToFinish(page);
         await checkConsoleContent(page, "Hello from Strype\n");
+        await expect(page.getByRole("log")).toContainText("Hello from Strype");
         await checkFrameErrorCount(page, 0);
     });
 

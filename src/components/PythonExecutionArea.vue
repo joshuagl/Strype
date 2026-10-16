@@ -1,6 +1,6 @@
 <template>
     <div :id="peaComponentId" :class="{'pea-component': true, [scssVars.expandedPEAClassName]: isExpandedPEA, 'no-43-ratio-collapsed-PEA': !hasDefault43Ratio && !isExpandedPEA}" ref="peaComponent" @mousedown="handlePEAMouseDown">
-        <div :id="controlsDivId" :class="{'pea-controls-div': true, 'expanded-PEA-controls': isExpandedPEA}">           
+        <div :id="controlsDivId" :class="{'pea-controls-div': true, 'expanded-PEA-controls': isExpandedPEA}">
             <BTabs v-model:index="peaDisplayTabIndex" no-key-nav>
                 <!-- v-show on a BTab doesn't hide its header, and removing it (v-if) would shift the other tabs' indexes, so
                      in the split layouts the graphics header is hidden by class instead (see .pea-hidden-tab) -->
@@ -114,6 +114,7 @@ import {clearAllRuntimeErrors, computeFrameSnapshot} from "@/helpers/storeMethod
 import {listEntriesForWorker} from "@/helpers/localFsCache";
 import html2canvas from "html2canvas";
 import FileSystemPane from "@/components/FileSystemTab/FileSystemPane.vue";
+import { eventBus } from "@/helpers/appContext";
 
 // Helper to keep indexed tabs (for maintenance if we add some tabs etc)
 const enum PEATabIndexes {graphics, console, files}
@@ -781,6 +782,7 @@ export default defineComponent({
                         const wasNearBottom = pythonConsole.scrollHeight - pythonConsole.scrollTop - pythonConsole.clientHeight < 10; // px tolerance
 
                         pythonConsole.value += output;
+                        eventBus.emit("consoleOutputAnnouncement", output);
 
                         if (wasNearBottom) {
                             pythonConsole.scrollTop = pythonConsole.scrollHeight;
