@@ -645,8 +645,10 @@ export default defineComponent({
                 if((event.ctrlKey || event.metaKey) && eventKeyLowCase === "enter" && isTargetRefDefined) {
                     // #v-ifdef STRYPE_PLATFORM == VITE_STANDARD_PYTHON_MODE
                     vueComponentsAPIHandler.peaComponentAPI?.focusClickRunButton();
-                    // Need to unfocus to avoid keyboard focus non-obviously remaining with the run button:
+                    // The run button needs to be focused for the click to count as a user action,
+                    // but restore focus to the editor instead of leaving it on the button or body.
                     vueComponentsAPIHandler.peaComponentAPI?.blurRunButton();
+                    document.getElementById(getFrameUID(this.appStore.currentFrame.id))?.focus();
                     // #v-else
                     // If the run Python shortcut is triggered with the micro:bit version, we start/stop the simulator.                        
                     if(event.ctrlKey){

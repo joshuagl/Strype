@@ -13,6 +13,14 @@ test.beforeEach(async ({ page, browserName }, testInfo) => {
 });
 
 test.describe("Check console after execution", () => {
+    test("Ctrl+Enter returns focus to the editor", async ({page}) => {
+        await enterCode(page, ["", "", "print('Hello')\n"]);
+        await page.keyboard.press("Control+Enter");
+        await runButtonShowsRun(page.locator("#runButton"));
+        await checkConsoleContent(page, "Hello\n");
+        await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toMatch(/^frame_id_/);
+    });
+
     test("Check default code works", async ({page}) => {
         await runToFinish(page);
         await checkConsoleContent(page, "Hello from Strype\n");
