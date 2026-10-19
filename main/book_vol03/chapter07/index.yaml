@@ -1,0 +1,23 @@
+- file: explosion.spy
+  image: explosion.png
+  description: A visual effect of an explosion
+
+- file: fish-school.spy
+  image: fish-school.png
+  description: A demo of flocking behaviour
+
+- file: oop-crab.spy
+  image: crab.png
+  description: An object-oriented version of a simple game
+
+- file: cheese.spy
+  image: cheese.png
+  description: A playable game with momentum-based motion. Shoot the meatballs with your ketchup gun.
+
+- file: asteroids.spy
+  image: asteroids.png
+  description: A version of the classic 'Asteroids' game. Essentially the same as the 'cheese' project above.
+
+- file: renewables.spy
+  image: renewables.png
+  description: A demo of data analysis and plotting with some data science libraries.
