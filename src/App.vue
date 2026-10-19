@@ -3,6 +3,7 @@
     <BApp>
         <div class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{frameActionAnnouncement}}</div>
         <div id="editor-error-announcement" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{editorErrorAnnouncement}}</div>
+        <div class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{frameSectionAnnouncement}}</div>
         <div class="visually-hidden" role="log" aria-live="polite" aria-relevant="additions" aria-atomic="false">
             <div v-for="announcement in consoleOutputAnnouncements" :key="announcement.id">{{announcement.text}}</div>
         </div>
@@ -149,7 +150,8 @@ import { getAPIItemTextualDescriptions } from "./helpers/microbitAPIDiscovery";
 import { DAPWrapper } from "./helpers/partial-flashing";
 // #v-endif
 import { mapStores } from "pinia";
-import {getAdjacentColourSlotInfos, getFlatNeighbourFieldSlotInfos, getSlotIdFromParentIdAndIndexSplit, getSlotParentIdAndIndexSplit, retrieveParentSlotFromSlotInfos, retrieveSlotFromSlotInfos, getFrameBelowCaretPosition, checkCodeErrors, calculateNextCollapseState, showIndexDBError} from "./helpers/storeMethods";
+import {getAdjacentColourSlotInfos, getFlatNeighbourFieldSlotInfos, getSlotIdFromParentIdAndIndexSplit, getSlotParentIdAndIndexSplit, retrieveParentSlotFromSlotInfos, retrieveSlotFromSlotInfos, getFrameBelowCaretPosition, getFrameSectionIdFromFrameId, checkCodeErrors, calculateNextCollapseState, showIndexDBError} from "./helpers/storeMethods";
+import { createOrGetAudioContext } from "./helpers/audioContext";
 import { cloneDeep } from "lodash";
 import {pasteMixedPython} from "@/helpers/pythonToFrames";
 import MediaPreviewPopup from "@/components/MediaPreviewPopup.vue";
@@ -245,6 +247,7 @@ export default defineComponent({
             colourPickerInitialColour: null as string | null,
             frameActionAnnouncement: "",
             editorErrorAnnouncement: "",
+            frameSectionAnnouncement: "",
             consoleOutputAnnouncements: [] as {id: number; text: string}[],
             nextConsoleOutputAnnouncementId: 0,
         };
@@ -283,6 +286,10 @@ export default defineComponent({
         // currently pending (see LabelSlotsStructure.vue's cancelPendingConversion()).
         pendingSlotConversion() : string {
             return (this.appStore.pendingSlotConversionCount > 0) ? "true" : "false";
+        },
+
+        currentFrameSectionId(): number {
+            return getFrameSectionIdFromFrameId(this.appStore.currentFrame.id);
         },
 
         showMessage(): boolean {
@@ -423,6 +430,18 @@ export default defineComponent({
 
         getCompanionDndCanvasId(): string {
             return getCompanionDndCanvasId();
+        },
+    },
+
+    watch: {
+        currentFrameSectionId(newSectionId: number, oldSectionId: number) {
+            if (newSectionId === oldSectionId) {
+                return;
+            }
+            const section = this.appStore.frameObjects[newSectionId];
+            if (section) {
+                this.frameSectionAnnouncement = section.frameType.labels[0].label.replace(/[:：]\s*$/, "");
+            }
         },
     },
 
