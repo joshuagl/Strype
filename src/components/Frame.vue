@@ -29,6 +29,7 @@
             <FrameHeader
                 v-if="frameType.labels !== null"
                 :id="frameHeaderId"
+                :errorDescriptionId="frameErrorDescriptionIds"
                 :isDisabled="isDisabled"
                 v-blur="isDisabled || isBeingDraggedComputed"
                 :frameId="frameId"
@@ -45,6 +46,16 @@
                 :wasLastRuntimeError="wasLastRuntimeError"
                 :onFocus="showFrameParseErrorPopupOnHeaderFocus"
             />
+            <span
+                v-if="hasRuntimeError || wasLastRuntimeError"
+                :id="runtimeErrorDescriptionUID"
+                class="visually-hidden"
+            >{{runtimeErrorDescription}}</span>
+            <span
+                v-if="hasParsingError"
+                :id="parsingErrorDescriptionUID"
+                class="visually-hidden"
+            >{{parsingErrorDescription}}</span>
             <teleport to="body">
                 <BPopover
                     v-if="hasRuntimeError || wasLastRuntimeError || hasParsingError"
@@ -123,10 +134,12 @@ export default defineComponent({
     setup(componentInstance){
         // Move the Options API style computed properties here if we need them setup:
         const errorPopoverUID = "errorPopover_frame_" + componentInstance.frameId;
+        const runtimeErrorDescriptionUID = "runtimeErrorDescription_frame_" + componentInstance.frameId;
+        const parsingErrorDescriptionUID = "parsingErrorDescription_frame_" + componentInstance.frameId;
 
         // Expose useToogle() of Bootstrap Vue Next inside setup (otherwise we get an error, even if it works)
         const toggleErrorPopover = useToggle(errorPopoverUID);
-        return { errorPopoverUID, toggleErrorPopover };
+        return { errorPopoverUID, runtimeErrorDescriptionUID, parsingErrorDescriptionUID, toggleErrorPopover };
     },
 
     created() {
@@ -294,6 +307,23 @@ export default defineComponent({
 
         errorPopupContent(): string {
             return (this.hasParsingError) ? this.parsingErrorMessage : ((this.hasRuntimeError) ? this.runTimeErrorMessage : this.runtimeErrorAtLastRunMsg);
+        },
+
+        runtimeErrorDescription(): string {
+            const message = this.hasRuntimeError ? this.runTimeErrorMessage : this.runtimeErrorAtLastRunMsg;
+            return this.$t("accessibility.runtimeErrorInFrame", {message});
+        },
+
+        parsingErrorDescription(): string {
+            return this.$t("accessibility.parsingErrorInFrame", {message: this.parsingErrorMessage});
+        },
+
+        frameErrorDescriptionIds(): string | undefined {
+            const ids = [
+                (this.hasParsingError ? this.parsingErrorDescriptionUID : ""),
+                (this.hasRuntimeError || this.wasLastRuntimeError ? this.runtimeErrorDescriptionUID : ""),
+            ].filter(Boolean);
+            return ids.length ? ids.join(" ") : undefined;
         },
 
         deletableFrame(): boolean{

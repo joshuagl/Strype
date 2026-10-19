@@ -10,6 +10,9 @@ import scssVars from "@/assets/style/_export.module.scss";
 import { $enum } from "ts-enum-util";
 import { getUserDefinedSignature } from "@/autocompletion/acManager";
 import { calculatePrecedenceTiers, UNARY_PREFIX_OPERATORS } from "@/helpers/operatorPrecedence";
+import { eventBus } from "@/helpers/appContext";
+
+let announcedCodeErrorSignatures = new Set<string>();
 
 export const retrieveSlotFromSlotInfos = (slotCoreInfos: SlotCoreInfos): FieldSlot => {
     // Retrieve the slot from its id (used for UI), check generateFlatSlotBases() for IDs explanation    
@@ -1190,6 +1193,8 @@ export function checkPrecompiledErrorsForFrame(frameId: number): void {
 }
 
 export function checkCodeErrors(frameIdsForPrecompiled?: number | number[]): void {
+    const currentErrorSignatures = new Set<string>();
+    const newCodeErrors: string[] = [];
     // We check errors in in three passes (all code errors are cleared in 1) and 2)): 
     //   1) check for the UI pre-compiled errors for each frame unless if specific frame(s) are specified, then we check those frames only
     //      (Passes 2) and 3) are always for the whole project, and 3) is expensive, so when several frames have changed, pass them all
@@ -1221,6 +1226,53 @@ export function checkCodeErrors(frameIdsForPrecompiled?: number | number[]): voi
     nextTick().then(() => {
         checkEditorCodeErrors();
         useStore().errorCount = countEditorCodeErrors();
+
+        const currentErrors: {signature: string; message: string}[] = [];
+        Object.values(useStore().frameObjects).forEach((frame) => {
+            if(frame.atParsingError) {
+                currentErrors.push({
+                    signature: `frame:${frame.id}:${frame.atParsingError}`,
+                    message: frame.atParsingError,
+                });
+            }
+            Object.keys(frame.labelSlotsDict).forEach((labelSlotsIndex) => {
+                const labelSlotContent = frame.labelSlotsDict[Number(labelSlotsIndex)];
+                generateFlatSlotBases(
+                    frame.frameType.labels[Number(labelSlotsIndex)],
+                    labelSlotContent.slotStructures,
+                    undefined,
+                    (flatSlot) => {
+                        if(flatSlot.error) {
+                            const slotUID = getLabelSlotUID({
+                                frameId: frame.id,
+                                labelSlotsIndex: Number(labelSlotsIndex),
+                                slotId: flatSlot.id,
+                                slotType: flatSlot.type,
+                            });
+                            currentErrors.push({
+                                signature: `slot:${slotUID}:${flatSlot.error}`,
+                                message: flatSlot.error,
+                            });
+                        }
+                    }
+                );
+            });
+        });
+
+        currentErrors.forEach(({signature, message}) => {
+            currentErrorSignatures.add(signature);
+            if(!announcedCodeErrorSignatures.has(signature)) {
+                newCodeErrors.push(message);
+            }
+        });
+        announcedCodeErrorSignatures = currentErrorSignatures;
+        if(newCodeErrors.length > 0) {
+            eventBus.emit("editorErrorAnnouncement", {
+                kind: "code",
+                count: newCodeErrors.length,
+                firstError: newCodeErrors[0],
+            });
+        }
     }); 
 }
 

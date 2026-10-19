@@ -45,6 +45,10 @@
     "genericFrame": "frame",
     "media": "media",
     "noNextFrame": "No frame below",
+    "runtimeErrorAnnouncement": "Runtime error in the highlighted frame: {message}",
+    "runtimeErrorInFrame": "Runtime error: {message}",
+    "codeErrorsAnnouncement": "Code errors found ({count}). First error: {message}",
+    "parsingErrorInFrame": "Parsing error: {message}",
     "frameActions": {
       "inserted": "Frames inserted: {count}",
       "insertedWithType": "Inserted frame type: {frameType}",

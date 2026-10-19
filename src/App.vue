@@ -2,6 +2,7 @@
     <!-- With the new package for Bootstrap (for Vue 3), BApp must wrap the application content -->
     <BApp>
         <div class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{frameActionAnnouncement}}</div>
+        <div id="editor-error-announcement" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{editorErrorAnnouncement}}</div>
         <div class="visually-hidden" role="log" aria-live="polite" aria-relevant="additions" aria-atomic="false">
             <div v-for="announcement in consoleOutputAnnouncements" :key="announcement.id">{{announcement.text}}</div>
         </div>
@@ -161,7 +162,7 @@ import axios from "axios";
 import scssVars from "@/assets/style/_export.module.scss";
 import {loadDivider, loadPinnedLocalFiles} from "@/helpers/load-save";
 import FrameHeader from "@/components/FrameHeader.vue";
-import { eventBus, FrameActionAnnouncement, projectDocumentationFrameId } from "@/helpers/appContext";
+import { EditorErrorAnnouncement, eventBus, FrameActionAnnouncement, projectDocumentationFrameId } from "@/helpers/appContext";
 import {inflateRaw} from "pako";
 import { Base64 } from "js-base64";
 import { BvTriggerableEvent } from "bootstrap-vue-next";
@@ -243,6 +244,7 @@ export default defineComponent({
             isRecordingMediaFlowActive: false,
             colourPickerInitialColour: null as string | null,
             frameActionAnnouncement: "",
+            editorErrorAnnouncement: "",
             consoleOutputAnnouncements: [] as {id: number; text: string}[],
             nextConsoleOutputAnnouncementId: 0,
         };
@@ -778,6 +780,7 @@ export default defineComponent({
         // The events from Bootstrap modal are registered on the eventBus
         eventBus.on(CustomEventTypes.strypeModalHidden, this.onHideModalDlg);  
         eventBus.on("frameActionAnnouncement", this.onFrameActionAnnouncement);
+        eventBus.on("editorErrorAnnouncement", this.onEditorErrorAnnouncement);
         eventBus.on("consoleOutputAnnouncement", this.onConsoleOutputAnnouncement);
     },
 
@@ -788,6 +791,7 @@ export default defineComponent({
         document.removeEventListener("wheel", this.blockScrollOnContextMenu);
         eventBus.off(CustomEventTypes.strypeModalHidden, this.onHideModalDlg);  
         eventBus.off("frameActionAnnouncement", this.onFrameActionAnnouncement);
+        eventBus.off("editorErrorAnnouncement", this.onEditorErrorAnnouncement);
         eventBus.off("consoleOutputAnnouncement", this.onConsoleOutputAnnouncement);
     },
 
@@ -1009,6 +1013,14 @@ export default defineComponent({
                 else {
                     this.frameActionAnnouncement = this.$t(`accessibility.frameActions.${announcement.action}`, {count: announcement.count});
                 }
+            });
+        },
+        onEditorErrorAnnouncement(announcement: EditorErrorAnnouncement) {
+            this.editorErrorAnnouncement = "";
+            this.$nextTick(() => {
+                this.editorErrorAnnouncement = announcement.kind === "runtime"
+                    ? this.$t("accessibility.runtimeErrorAnnouncement", {message: announcement.message})
+                    : this.$t("accessibility.codeErrorsAnnouncement", {count: announcement.count, message: announcement.firstError});
             });
         },
         onConsoleOutputAnnouncement(output: string) {

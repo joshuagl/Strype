@@ -25,6 +25,8 @@
             @keydown="onKeyDown($event)"
             @contentPastedInSlot="onCodePaste"
             :class="{[scssVars.labelSlotInputClassName]: true, [scssVars.navigationPositionClassName]: isEditableSlot && !isFrozen, [scssVars.errorSlotClassName]: erroneous(), [scssVars.precompileErrorClassName]: erroneous(), [getSpanTypeClass]: true, bold: isEmphasised, readonly: (isPythonExecuting || isDisabled)}"
+            :aria-invalid="isErrorVisible ? 'true' : undefined"
+            :aria-describedby="isErrorVisible ? errorDescriptionUID : undefined"
             :id="UID"
             :key="UID"
             :style="spanBackgroundStyle"
@@ -35,6 +37,12 @@
             v-if="!isMediaSlot"
         >
         </span>
+        <span
+            v-if="isErrorVisible"
+            :id="errorDescriptionUID"
+            class="visually-hidden"
+            contenteditable="false"
+        >{{errorDescription}}</span>
         <img
             :src="mediaPreview.imageDataURL"
             v-if="isMediaSlot"
@@ -107,10 +115,11 @@ export default defineComponent({
     setup(componentInstance){
         // Move the Options API style computed properties here if we need them setup:
         const errorPopoverUID = `errorPopover_labelSlot_${componentInstance.frameId}_${componentInstance.labelSlotsIndex}_${componentInstance.slotId}`;
+        const errorDescriptionUID = `errorDescription_labelSlot_${componentInstance.frameId}_${componentInstance.labelSlotsIndex}_${componentInstance.slotId}`;
 
         // Expose useToogle() of Bootstrap Vue Next inside setup (otherwise we get an error, even if it works)
         const toggleErrorPopover = useToggle(errorPopoverUID);
-        return { errorPopoverUID, toggleErrorPopover };
+        return { errorPopoverUID, errorDescriptionUID, toggleErrorPopover };
     },
 
     created() {
@@ -384,6 +393,14 @@ export default defineComponent({
         errorHeader(): string{
             return this.appStore.getErrorHeaderForSlot(this.coreSlotInfo);
         },
+
+        errorDescription(): string {
+            return `${this.errorHeader}: ${this.errorMessage}`;
+        },
+
+        isErrorVisible(): boolean {
+            return this.isFirstChange && this.appStore.isErroneousSlot(this.coreSlotInfo);
+        },
         
         isDraggingFrame(): boolean{
             return this.appStore.isDraggingFrame;
@@ -518,7 +535,7 @@ export default defineComponent({
 
         erroneous(): boolean {
             // Only show the popup when there is an error and the code hasn't changed
-            const isErroneous = this.isFirstChange && this.appStore.isErroneousSlot(this.coreSlotInfo);
+            const isErroneous = this.isErrorVisible;
             // The parent (label slot structure) notifies the grand-parent (the frame header) that a slot is erroneous
             if(isErroneous){
                 eventBus.emit(CustomEventTypes.notifyLabelSlotInError);

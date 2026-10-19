@@ -11,6 +11,9 @@ export const eventBus = mitt<Record<string, any>>();
 
 export type FrameAction = "inserted" | "deleted" | "moved" | "copied" | "pasted" | "cut" | "duplicated";
 export type FrameActionAnnouncement = {action: FrameAction; count: number; frameType?: string};
+export type EditorErrorAnnouncement =
+    | {kind: "runtime"; message: string}
+    | {kind: "code"; count: number; firstError: string};
 
 export function announceFrameAction(action: FrameAction, count: number, frameType?: string): void {
     const announcement: FrameActionAnnouncement = {action, count};

@@ -5,6 +5,7 @@ import { useStore } from "@/store/store";
 import i18n from "@/i18n";
 import { nextTick } from "vue";
 import { CustomEventTypes, setPythonExecAreaLayoutButtonPos } from "./editor";
+import { eventBus } from "./appContext";
 
 const STRYPE_RUN_ACTION_MSG = "StrypeRunActionCalled";
 const STRYPE_INPUT_INTERRUPT_ERR_MSG = "ExternalError: " + STRYPE_RUN_ACTION_MSG;
@@ -224,6 +225,7 @@ export function handleErrorTrace(errorType : string, traceback: { filename: stri
             // Set the error on the frame header -- do not use editable slots here as we can't give a detailed error location
             useStore().frameObjects[frameId].runTimeError = noLineSkulptErrStr;
             useStore().wasLastRuntimeErrorFrameId = frameId;
+            eventBus.emit("editorErrorAnnouncement", {kind: "runtime", message: noLineSkulptErrStr});
             // We now need to force expand that frame and all its ancestors so that it shows up:
             useStore().forceExpand(frameId);
         }
