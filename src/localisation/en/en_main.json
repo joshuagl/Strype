@@ -300,6 +300,7 @@
     "needSaveShareProj":"Save your project in the Cloud before sharing it",
     "lang": "Language: ",
     "frameNumbers": "Frame numbers:",
+    "sectionChangeSound": "Section change sound:",
     "homepage": "Strype Homepage",
     "apiDocumentation": "Library documentation...",
     "version": "Version",

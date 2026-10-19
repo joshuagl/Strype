@@ -182,6 +182,10 @@
                         <td><input type="checkbox" :id="frameNumbersCheckboxId" v-model="frameNumbersEnabled" @change="showMenu=false;" @click="setCurrentTabIndexFromEltId(frameNumbersCheckboxId)"></td>
                     </tr>
                     <tr>
+                        <td><label :for="sectionChangeSoundCheckboxId">{{$t("appMenu.sectionChangeSound")}}</label></td>
+                        <td><input type="checkbox" :id="sectionChangeSoundCheckboxId" v-model="sectionChangeSoundEnabled" @change="showMenu=false;" @click="setCurrentTabIndexFromEltId(sectionChangeSoundCheckboxId)"></td>
+                    </tr>
+                    <tr>
                         <td><label :for="appLangSelectId">{{$t("appMenu.lang")}}</label></td>
                         <td>
                             <select name="lang" :id="appLangSelectId" v-model="appLang" @change="showMenu=false;" :class="scssVars.strypeMenuItemClassName" @click="setCurrentTabIndexFromEltId(appLangSelectId)">
@@ -533,6 +537,10 @@ export default defineComponent({
             return "frameNumbersCheckboxId";
         },
 
+        sectionChangeSoundCheckboxId(): string {
+            return "sectionChangeSoundCheckboxId";
+        },
+
         locales(): Locale[] {
             // The locale codes are already parts of the i18n messages at this stage, so they are easy to retrieve.
             // We retrieve the corresponding locale's friendly name from i18n directly.
@@ -782,6 +790,15 @@ export default defineComponent({
             },
             set(enabled: boolean) {
                 this.settingsStore.setFrameNumbersEnabled(enabled);
+            },
+        },
+
+        sectionChangeSoundEnabled: {
+            get(): boolean {
+                return this.settingsStore.sectionChangeSoundEnabled;
+            },
+            set(enabled: boolean) {
+                this.settingsStore.setSectionChangeSoundEnabled(enabled);
             },
         },
 

@@ -441,6 +441,9 @@ export default defineComponent({
             const section = this.appStore.frameObjects[newSectionId];
             if (section) {
                 this.frameSectionAnnouncement = section.frameType.labels[0].label.replace(/[:：]\s*$/, "");
+                if (this.settingsStore.sectionChangeSoundEnabled) {
+                    this.playSectionChangeCue();
+                }
             }
         },
     },
@@ -1019,6 +1022,27 @@ export default defineComponent({
 
     methods: {
         getFrameHeaderUID,
+        playSectionChangeCue() {
+            const audioContext = createOrGetAudioContext();
+            const oscillator = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            const startTime = audioContext.currentTime;
+
+            oscillator.type = "sine";
+            oscillator.frequency.setValueAtTime(740, startTime);
+            gain.gain.setValueAtTime(0.0001, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.035, startTime + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.12);
+            oscillator.connect(gain);
+            gain.connect(audioContext.destination);
+            oscillator.onended = () => {
+                oscillator.disconnect();
+                gain.disconnect();
+            };
+            oscillator.start(startTime);
+            oscillator.stop(startTime + 0.13);
+        },
+
         onFrameActionAnnouncement(announcement: FrameActionAnnouncement) {
             this.frameActionAnnouncement = "";
             this.$nextTick(() => {
@@ -1152,6 +1176,9 @@ export default defineComponent({
                 // (only a cloud target can be promoted: if the saved value isn't one, we keep the default)
                 if(savedSettingsState.promotedCloudTarget !== undefined && isSyncTargetCloudDrive(savedSettingsState.promotedCloudTarget)) {
                     this.settingsStore.promotedCloudTarget = savedSettingsState.promotedCloudTarget;
+                }
+                if(typeof savedSettingsState.sectionChangeSoundEnabled === "boolean") {
+                    this.settingsStore.setSectionChangeSoundEnabled(savedSettingsState.sectionChangeSoundEnabled);
                 }
                 if(!savedSettingsState.locale) {
                     // There is no locale saved. Maybe the user wants to use the default English, but maybe
