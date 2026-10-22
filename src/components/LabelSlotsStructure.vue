@@ -10,6 +10,8 @@
         :aria-autocomplete="autocompleteOpen ? 'list' : undefined"
         :aria-controls="autocompleteOpen ? autocompleteListboxId : undefined"
         :aria-activedescendant="autocompleteOpen ? autocompleteActiveDescendant ?? undefined : undefined"
+        :aria-invalid="focusedSlotError ? 'true' : undefined"
+        :aria-describedby="focusedSlotErrorDescriptionUID"
         @keydown.left="onLRKeyDown($event)"
         @keydown.right="onLRKeyDown($event)"
         @keydown.up="slotUpDown($event)"
@@ -69,7 +71,7 @@ import { computed, defineComponent, ref } from "vue";
 import { useStore } from "@/store/store";
 import { mapStores } from "pinia";
 import LabelSlot from "@/components/LabelSlot.vue";
-import { bumpCaretRequestSeq, CustomEventTypes, getEditableSelectionText, getFrameLabelSlotLiteralCodeAndFocus, getFrameLabelSlotsStructureUID, getFunctionCallDefaultText, getLabelSlotUID, getMatchingBracket, getSelectionCursorsComparisonValue, getUIQuote, isElementEditableLabelSlotInput, isLabelSlotEditable, isSlotShortcutsPaneSpaceDueToDelay, openBracketCharacters, parseCodeLiteral, parseLabelSlotUID, setDocumentSelection, STRING_DOUBLEQUOTE_PLACERHOLDER, STRING_SINGLEQUOTE_PLACERHOLDER, stringQuoteCharacters, UIDoubleQuotesCharacters, UISingleQuotesCharacters, getGraphemeLength, getFrameHeaderUID, getLastCaretPosInsideParent, getFlatCodeSlotsInLabelStruct, focusCaretContainerInput, closeRenameIdentifierPopups, getImportFrameNameBindings, waitForElementId } from "@/helpers/editor";
+import { bumpCaretRequestSeq, CustomEventTypes, getEditableSelectionText, getFrameLabelSlotLiteralCodeAndFocus, getFrameLabelSlotsStructureUID, getFunctionCallDefaultText, getLabelSlotErrorDescriptionUID, getLabelSlotUID, getMatchingBracket, getSelectionCursorsComparisonValue, getUIQuote, isElementEditableLabelSlotInput, isLabelSlotEditable, isSlotShortcutsPaneSpaceDueToDelay, openBracketCharacters, parseCodeLiteral, parseLabelSlotUID, setDocumentSelection, STRING_DOUBLEQUOTE_PLACERHOLDER, STRING_SINGLEQUOTE_PLACERHOLDER, stringQuoteCharacters, UIDoubleQuotesCharacters, UISingleQuotesCharacters, getGraphemeLength, getFrameHeaderUID, getLastCaretPosInsideParent, getFlatCodeSlotsInLabelStruct, focusCaretContainerInput, closeRenameIdentifierPopups, getImportFrameNameBindings, waitForElementId } from "@/helpers/editor";
 import { checkCodeErrors, evaluateSlotType, filterAllowedJointChildrenAfter, generateFlatSlotBases, getFlatNeighbourFieldSlotInfos, getFrameParentSlotsLength, getParentOrJointParent, getSlotDefFromInfos, getSlotIdFromParentIdAndIndexSplit, getSlotParentIdAndIndexSplit, retrieveSlotByPredicate, retrieveSlotFromSlotInfos, getParentId, getFrameSectionIdFromFrameId, areSlotStructuresIsomorphic, getAncestorFrameOfTypeId, findSlotsWithIndentifierName, isAncestorGatedFrameTypeAllowed } from "@/helpers/storeMethods";
 import { cloneDeep } from "lodash";
 import Parser from "@/parser/parser";
@@ -316,7 +318,23 @@ export default defineComponent({
         focusSlotCursorInfos(): SlotCursorInfos | undefined {
             return this.appStore.focusSlotCursorInfos;
         },
-        
+
+        focusedSlotError(): SlotCoreInfos | undefined {
+            const focusedSlot = this.appStore.focusSlotCursorInfos?.slotInfos;
+            if (focusedSlot?.frameId === this.frameId &&
+                focusedSlot.labelSlotsIndex === this.labelIndex &&
+                this.appStore.isErroneousSlot(focusedSlot)) {
+                return focusedSlot;
+            }
+            return undefined;
+        },
+
+        focusedSlotErrorDescriptionUID(): string | undefined {
+            return this.focusedSlotError
+                ? getLabelSlotErrorDescriptionUID(this.focusedSlotError)
+                : undefined;
+        },
+
         renameAllPopupButtonLabel(): string {
             return this.$t("buttonLabel.renameAllWithShortcut", {modifierkey: this.$t("contextMenu.ctrl")});
         },

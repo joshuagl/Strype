@@ -45,8 +45,10 @@ async function checkErrorAfterExitingSlot(page: Page, keypresses : string[] = ["
     // Now should show an error (toContainClass already retries, no need for a wait beforehand):
     const erroneousSlot = page.locator(`#${slotId}`);
     await expect(erroneousSlot).toContainClass("error-slot");
-    await expect(erroneousSlot).toHaveAttribute("aria-invalid", "true");
-    const errorDescriptionId = await erroneousSlot.getAttribute("aria-describedby");
+    await erroneousSlot.click();
+    const focusedLabel = erroneousSlot.locator("xpath=../..");
+    await expect(focusedLabel).toHaveAttribute("aria-invalid", "true");
+    const errorDescriptionId = await focusedLabel.getAttribute("aria-describedby");
     expect(errorDescriptionId).not.toBeNull();
     await expect(page.locator(`[id="${errorDescriptionId}"]`)).toContainText("Error:");
     await expect(page.locator("#editor-error-announcement")).toContainText("Code errors found");

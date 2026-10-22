@@ -200,6 +200,10 @@ export function getLabelSlotUID(slotCoreInfos: SlotCoreInfos): string {
     return "input_frame_" + slotCoreInfos.frameId + "_label_" + slotCoreInfos.labelSlotsIndex + "_slot_" + paddedTypValue + "_" + slotCoreInfos.slotId;
 }
 
+export function getLabelSlotErrorDescriptionUID(slotCoreInfos: SlotCoreInfos): string {
+    return "errorDescription_" + getLabelSlotUID(slotCoreInfos);
+}
+
 
 export function parseLabelSlotUID(UID: string): SlotCoreInfos {
     // Cf. getLabelSlotUID() for the format

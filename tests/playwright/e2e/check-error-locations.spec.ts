@@ -41,6 +41,18 @@ test.describe("Check errors show", () => {
         expect(errorDescriptionId).not.toBeNull();
         await expect(page.locator(`[aria-describedby="${errorDescriptionId}"]`)).toHaveCount(1);
     });
+    test("Undefined variable errors are announced and described", async ({page}) => {
+        await enterCode(page, ["", "", "answer = 42\nprint(answr)"]);
+        await runToFinish(page);
+
+        await expect(page.locator("#editor-error-announcement")).toContainText(/answr.*not defined/);
+        const errorDescription = page.locator("[id^=\"runtimeErrorDescription_frame_\"]");
+        await expect(errorDescription).toContainText("answr");
+        const errorDescriptionId = await errorDescription.getAttribute("id");
+        expect(errorDescriptionId).not.toBeNull();
+        const describedFrameHeader = page.locator(`[aria-describedby="${errorDescriptionId}"]`);
+        await expect(describedFrameHeader).toHaveAttribute("aria-invalid", "true");
+    });
     test("Check error shows #2", async ({page}) => {
         await enterCode(page, ["", "", "print('a'.foo())"]);
         await runToFinish(page);

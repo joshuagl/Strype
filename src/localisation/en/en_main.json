@@ -45,7 +45,7 @@
     "genericFrame": "frame",
     "media": "media",
     "noNextFrame": "No frame below",
-    "runtimeErrorAnnouncement": "Runtime error in the highlighted frame: {message}",
+    "runtimeErrorAnnouncement": "Runtime error in the focused frame: {message}",
     "runtimeErrorInFrame": "Runtime error: {message}",
     "codeErrorsAnnouncement": "Code errors found ({count}). First error: {message}",
     "parsingErrorInFrame": "Parsing error: {message}",

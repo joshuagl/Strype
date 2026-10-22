@@ -25,8 +25,6 @@
             @keydown="onKeyDown($event)"
             @contentPastedInSlot="onCodePaste"
             :class="{[scssVars.labelSlotInputClassName]: true, [scssVars.navigationPositionClassName]: isEditableSlot && !isFrozen, [scssVars.errorSlotClassName]: erroneous(), [scssVars.precompileErrorClassName]: erroneous(), [getSpanTypeClass]: true, bold: isEmphasised, readonly: (isPythonExecuting || isDisabled)}"
-            :aria-invalid="isErrorVisible ? 'true' : undefined"
-            :aria-describedby="isErrorVisible ? errorDescriptionUID : undefined"
             :id="UID"
             :key="UID"
             :style="spanBackgroundStyle"
@@ -88,7 +86,7 @@ import { defineComponent, PropType } from "vue";
 import Cache from "timed-cache";
 import { useStore } from "@/store/store";
 import AutoCompletion from "@/components/AutoCompletion.vue";
-import { bumpCaretRequestSeq, bumpLastSlotCharacterTypedTimestamp, closeBracketCharacters, CustomEventTypes, getACLabelSlotUID, getCaretRequestSeq, getFocusedEditableSlotTextSelectionStartEnd, getFrameHeaderUID, getFrameLabelSlotLiteralCodeAndFocus, getFrameLabelSlotsStructureUID, getFrameUID, getLabelSlotUID, getMatchingBracket, getNumPrecedingBackslashes, getSelectionCursorsComparisonValue, getTextStartCursorPositionOfHTMLElement, keywordOperatorsWithSurroundSpaces, openBracketCharacters, operators, parseCodeLiteral, parseLabelSlotUID, setDocumentSelection, simpleSlotStructureToString, STRING_DOUBLEQUOTE_PLACERHOLDER, STRING_SINGLEQUOTE_PLACERHOLDER, stringDoubleQuoteChar, stringQuoteCharacters, stringSingleQuoteChar, UIDoubleQuotesCharacters, UISingleQuotesCharacters, getGraphemeLength } from "@/helpers/editor";
+import { bumpCaretRequestSeq, bumpLastSlotCharacterTypedTimestamp, closeBracketCharacters, CustomEventTypes, getACLabelSlotUID, getCaretRequestSeq, getFocusedEditableSlotTextSelectionStartEnd, getFrameHeaderUID, getFrameLabelSlotLiteralCodeAndFocus, getFrameLabelSlotsStructureUID, getFrameUID, getLabelSlotErrorDescriptionUID, getLabelSlotUID, getMatchingBracket, getNumPrecedingBackslashes, getSelectionCursorsComparisonValue, getTextStartCursorPositionOfHTMLElement, keywordOperatorsWithSurroundSpaces, openBracketCharacters, operators, parseCodeLiteral, parseLabelSlotUID, setDocumentSelection, simpleSlotStructureToString, STRING_DOUBLEQUOTE_PLACERHOLDER, STRING_SINGLEQUOTE_PLACERHOLDER, stringDoubleQuoteChar, stringQuoteCharacters, stringSingleQuoteChar, UIDoubleQuotesCharacters, UISingleQuotesCharacters, getGraphemeLength } from "@/helpers/editor";
 import { AllFrameTypesIdentifier, AllowedSlotContent, areSlotCoreInfosEqual, BaseSlot, CaretPosition, CollapsedState, EditImageInDialogFunction, FieldSlot, FormattedMessage, FormattedMessageArgKeyValuePlaceholders, FrameObject, getFrameDefType, isFieldBracketedSlot, isFieldStringSlot, LoadedMedia, MediaSlot, MessageDefinitions, OptionalSlotType, PythonExecRunningState, SlotCoreInfos, SlotCursorInfos, SlotsStructure, SlotType, StringSlot } from "@/types/types";
 import { getCandidatesForAC } from "@/autocompletion/acManager";
 import { isKnownFileNameOrPath } from "@/helpers/knownFiles";
@@ -114,9 +112,14 @@ export default defineComponent({
 
     setup(componentInstance){
         // Move the Options API style computed properties here if we need them setup:
+        const slotCoreInfos = {
+            frameId: componentInstance.frameId,
+            labelSlotsIndex: componentInstance.labelSlotsIndex,
+            slotId: componentInstance.slotId,
+            slotType: componentInstance.slotType,
+        };
         const errorPopoverUID = `errorPopover_labelSlot_${componentInstance.frameId}_${componentInstance.labelSlotsIndex}_${componentInstance.slotId}`;
-        const errorDescriptionUID = `errorDescription_labelSlot_${componentInstance.frameId}_${componentInstance.labelSlotsIndex}_${componentInstance.slotId}`;
-
+        const errorDescriptionUID = getLabelSlotErrorDescriptionUID(slotCoreInfos);
         // Expose useToogle() of Bootstrap Vue Next inside setup (otherwise we get an error, even if it works)
         const toggleErrorPopover = useToggle(errorPopoverUID);
         return { errorPopoverUID, errorDescriptionUID, toggleErrorPopover };
