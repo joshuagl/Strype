@@ -54,7 +54,7 @@
 import { defineComponent, PropType } from "vue";
 import { useStore } from "@/store/store";
 import Caret from"@/components/Caret.vue";
-import {AllFrameTypesIdentifier, AllowedSlotContent, CaretPosition, Position, PythonExecRunningState, CollapsedState, StrypeContextMenuItem, CoordPosition, FrameObject, FrozenState, SlotType} from "@/types/types";
+import {AllFrameTypesIdentifier, AllowedSlotContent, CaretPosition, Position, PythonExecRunningState, CollapsedState, StrypeContextMenuItem, CoordPosition, FrameObject, FrozenState, SlotType, ContainerTypesIdentifiers} from "@/types/types";
 import { getCaretUID, setContextMenuEventClientXY, getAddFrameCmdElementUID, CustomEventTypes, getCaretContainerUID, getCaretContainerFocusInputUID, getEditorMiddleUID, slotStructureParserToString } from "@/helpers/editor";
 import { mapStores } from "pinia";
 import { cloneDeep } from "lodash";
@@ -82,6 +82,12 @@ const scopeFrameTypes = [
     AllFrameTypesIdentifier.case,
     AllFrameTypesIdentifier.classdef,
     AllFrameTypesIdentifier.funcdef,
+];
+
+const sectionContainerTypes = [
+    ContainerTypesIdentifiers.importsContainer,
+    ContainerTypesIdentifiers.defsContainer,
+    ContainerTypesIdentifiers.framesMainContainer,
 ];
 
 function getFrameCodeDescription(frame: FrameObject, mediaDescription: string): string {
@@ -498,6 +504,45 @@ export default defineComponent({
                 && !structuralNextFrame.isDisabled
                 && (structuralNextFrame.collapsedState ?? CollapsedState.FULLY_VISIBLE) === CollapsedState.FULLY_VISIBLE;
 
+            const describeFrame = (frameToDescribe: FrameObject): string => {
+                const codeDescription = getFrameCodeDescription(frameToDescribe, this.$t("accessibility.media"));
+                if (codeDescription) {
+                    return codeDescription;
+                }
+
+                const descriptionKey = `frame.${frameToDescribe.frameType.type}_desc`;
+                return this.$te(descriptionKey)
+                    ? this.$t(descriptionKey)
+                    : this.$t("accessibility.genericFrame");
+            };
+
+            let endContainer: FrameObject | undefined;
+            if (this.caretAssignedPosition === CaretPosition.below && !hasPotentialNextFrame) {
+                const parentId = currentFrame.jointParentId > 0 ? currentFrame.jointParentId : currentFrame.parentId;
+                const parent = this.appStore.frameObjects[parentId];
+                if (parent && sectionContainerTypes.includes(parent.frameType.type)) {
+                    endContainer = parent;
+                }
+                else if (parent && scopeFrameTypes.includes(parent.frameType.type)) {
+                    const description = describeFrame(parent).replace(/\s*:\s*$/, "");
+                    return this.$t("accessibility.nextFrameBody", {description});
+                }
+            }
+            else if (this.caretAssignedPosition === CaretPosition.body
+                && sectionContainerTypes.includes(currentFrame.frameType.type)
+                && currentFrame.childrenIds.length === 0) {
+                endContainer = currentFrame;
+            }
+            if (endContainer) {
+                const description = (endContainer.frameType.labels[0]?.label ?? "")
+                    .replace(/<[^>]*>/g, " ")
+                    .replace(/&nbsp;/g, " ")
+                    .replace(/\s+/g, " ")
+                    .replace(/\s*:\s*$/, "")
+                    .trim();
+                return this.$t("accessibility.endOfContainer", {description});
+            }
+
             const nextPosition = getNextFrameCaretPosition(
                 {id: this.frameId, caretPosition: this.caretAssignedPosition},
                 "down"
@@ -515,18 +560,6 @@ export default defineComponent({
             if (!frame) {
                 return this.$t("accessibility.noNextFrame");
             }
-
-            const describeFrame = (frameToDescribe: FrameObject): string => {
-                const codeDescription = getFrameCodeDescription(frameToDescribe, this.$t("accessibility.media"));
-                if (codeDescription) {
-                    return codeDescription;
-                }
-
-                const descriptionKey = `frame.${frameToDescribe.frameType.type}_desc`;
-                return this.$te(descriptionKey)
-                    ? this.$t(descriptionKey)
-                    : this.$t("accessibility.genericFrame");
-            };
 
             const frameDescription = describeFrame(frame);
             const description = nextPosition.caretPosition === CaretPosition.body
