@@ -34,7 +34,9 @@ test.describe("Check errors show", () => {
         await runToFinish(page);
         await checkConsoleContent(page, "< TypeError: object of type 'NoneType' has no len() >\n  From the highlighted call in your code");
         await expectHasVisibleErrorIcon(page.locator("span", {hasText: "print"}));
-        await expect(page.locator("#editor-error-announcement")).toContainText(/Runtime error in the highlighted frame: .*object of type 'NoneType' has no len/);
+        await expect(page.locator("#editor-error-announcement")).toHaveAttribute("role", "alert");
+        await expect(page.locator("#editor-error-announcement")).toContainText(/Runtime error: .*object of type 'NoneType' has no len/);
+        await expect(page.getByRole("log")).toContainText("TypeError: object of type 'NoneType' has no len()");
         const errorDescription = page.locator("[id^=\"runtimeErrorDescription_frame_\"]");
         await expect(errorDescription).toContainText("Runtime error: TypeError: object of type 'NoneType' has no len()");
         const errorDescriptionId = await errorDescription.getAttribute("id");

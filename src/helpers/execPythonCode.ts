@@ -221,7 +221,9 @@ export function handleErrorTrace(errorType : string, traceback: { filename: stri
         // our current error related code implementation and clarity for the user.
         // Exception: if we have a "running action" message, we don't show anything (no message and no error).
         if (!errorType.startsWith(STRYPE_INPUT_INTERRUPT_ERR_MSG)) {
-            consoleTextArea.value += ("< " + noLineSkulptErrStr + " >" + moreInfo);
+            const consoleErrorOutput = "< " + noLineSkulptErrStr + " >" + moreInfo;
+            consoleTextArea.value += consoleErrorOutput;
+            eventBus.emit("consoleOutputAnnouncement", consoleErrorOutput);
             // Set the error on the frame header -- do not use editable slots here as we can't give a detailed error location
             useStore().frameObjects[frameId].runTimeError = noLineSkulptErrStr;
             useStore().wasLastRuntimeErrorFrameId = frameId;
@@ -234,7 +236,9 @@ export function handleErrorTrace(errorType : string, traceback: { filename: stri
         // In case we couldn't get the line and the frame correctly, we just display a simple message,
         // EXCEPT if we have a "running action" message, which doesn't need to be displayed as the UI already gives cues.
         if (errorType.localeCompare(STRYPE_RUN_ACTION_MSG) != 0) {
-            consoleTextArea.value += ("< " + errorType + " >" + moreInfo);
+            const consoleErrorOutput = "< " + errorType + " >" + moreInfo;
+            consoleTextArea.value += consoleErrorOutput;
+            eventBus.emit("consoleOutputAnnouncement", consoleErrorOutput);
         }
     }
     handleExecutionFinished(true);

@@ -2,7 +2,7 @@
     <!-- With the new package for Bootstrap (for Vue 3), BApp must wrap the application content -->
     <BApp>
         <div class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{frameActionAnnouncement}}</div>
-        <div id="editor-error-announcement" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{editorErrorAnnouncement}}</div>
+        <div id="editor-error-announcement" class="visually-hidden" role="alert" aria-live="assertive" aria-atomic="true">{{editorErrorAnnouncement}}</div>
         <div class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{frameSectionAnnouncement}}</div>
         <div class="visually-hidden" role="log" aria-live="polite" aria-relevant="additions" aria-atomic="false">
             <div v-for="announcement in consoleOutputAnnouncements" :key="announcement.id">{{announcement.text}}</div>
