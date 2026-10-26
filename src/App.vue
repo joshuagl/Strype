@@ -4,9 +4,7 @@
         <div class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{frameActionAnnouncement}}</div>
         <div id="editor-error-announcement" class="visually-hidden" role="alert" aria-live="assertive" aria-atomic="true">{{editorErrorAnnouncement}}</div>
         <div class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{frameSectionAnnouncement}}</div>
-        <div class="visually-hidden" role="log" aria-live="polite" aria-relevant="additions" aria-atomic="false">
-            <div v-for="announcement in consoleOutputAnnouncements" :key="announcement.id">{{announcement.text}}</div>
-        </div>
+        <div class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{consoleOutputAnnouncement}}</div>
         <div @mousedown.capture="onAppMouseDownCapture" role="application" tabindex="0">
             <div v-if="showAppProgress || setAppNotOnTop" :class="{'app-overlay-pane': true, 'app-overlay-pane-absolute': showAppProgress, 'app-progress-pane': showAppProgress}" @contextmenu="handleOverlayRightClick">
                 <div v-if="showAppProgress" class="app-progress-container">
@@ -248,8 +246,7 @@ export default defineComponent({
             frameActionAnnouncement: "",
             editorErrorAnnouncement: "",
             frameSectionAnnouncement: "",
-            consoleOutputAnnouncements: [] as {id: number; text: string}[],
-            nextConsoleOutputAnnouncementId: 0,
+            consoleOutputAnnouncement: "",
         };
     },
 
@@ -1067,13 +1064,10 @@ export default defineComponent({
             });
         },
         onConsoleOutputAnnouncement(output: string) {
-            this.consoleOutputAnnouncements.push({
-                id: this.nextConsoleOutputAnnouncementId++,
-                text: output,
+            this.consoleOutputAnnouncement = "";
+            this.$nextTick(() => {
+                this.consoleOutputAnnouncement = output;
             });
-            if (this.consoleOutputAnnouncements.length > 50) {
-                this.consoleOutputAnnouncements.shift();
-            }
         },
         setAutoSaveState() {
             // The autosave is only performed on the webstore
