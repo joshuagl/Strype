@@ -23,6 +23,7 @@
                 autocapitalize="off"
                 spellcheck="false"
                 inputmode="none"
+                :value="frameCursorInputValue"
                 :aria-label="accessibleLabel"
                 @input="clearFocusInputContent"
             />
@@ -258,6 +259,7 @@ export default defineComponent({
             areFramesDraggedOver: false,
             areDropFramesAllowed: true,
             isDuplicateDnDAction: false,
+            frameCursorInputValue: "",
             accessibleLabel: "",
             // Flag used to trigger the context menu opening
             showContextMenu: false,
@@ -288,6 +290,23 @@ export default defineComponent({
     methods: {
         updateAccessibleLabel() {
             this.accessibleLabel = this.computeAccessibleLabel();
+            if (this.frameId === this.appStore.currentFrame.id
+                && this.caretAssignedPosition === this.appStore.currentFrame.caretPosition) {
+                this.updateFrameCursorInputValue();
+            }
+        },
+
+        updateFrameCursorInputValue() {
+            const nextPosition = getNextFrameCaretPosition(
+                {id: this.frameId, caretPosition: this.caretAssignedPosition},
+                "down"
+            );
+            const frameNumber = nextPosition
+                ? this.appStore.getFrameVisualNumbers[nextPosition.id]
+                : undefined;
+            this.frameCursorInputValue = frameNumber === undefined
+                ? this.$t("accessibility.frameCursorInput")
+                : this.$t("accessibility.frameCursorInputHint", {number: frameNumber});
         },
 
         // Scrolls the frame cursor into view if it's not fully inside the editor's scrolling area. If
@@ -328,7 +347,7 @@ export default defineComponent({
         // Clears out the invisible paste-focus input's content to prevent stray characters (not caught
         // by a shortcut handler or typing --> frame insertion) lingering forever.
         clearFocusInputContent(event: Event) {
-            (event.target as HTMLInputElement).value = "";
+            (event.target as HTMLInputElement).value = this.frameCursorInputValue;
         },
 
         pasteIfFocused(event: ClipboardEvent) {

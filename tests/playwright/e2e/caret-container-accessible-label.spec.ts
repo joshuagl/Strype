@@ -15,13 +15,45 @@ test("describes the next frame at each frame-caret position", async ({page}) => 
     expect(labels.join(" ")).toContain("myString");
 });
 
+test("uses the following frame number in the frame cursor input", async ({page}) => {
+    await enterCode(page, ["", "", "rollDie(20)"]);
+    await waitForEditorSettled(page);
+    const cursorBeforeRollDie = page.locator(".caret-container-focus-input-wrapper input[aria-label^=\"Next frame: rollDie\"]");
+    await expect(cursorBeforeRollDie).toHaveCount(1);
+    await expect(cursorBeforeRollDie).toHaveValue("Frame 1");
+});
+
+test("uses visible document frame numbers for frame cursors", async ({page}) => {
+    const inputValues = await page.locator(".caret-container-focus-input-wrapper input").evaluateAll((inputs) => {
+        const app = (document.getElementById("app") as unknown as {__vue_app__: {config: {globalProperties: {$pinia: {_s: Map<string, {getFrameVisualNumbers: Record<number, number>}>}}}}}).__vue_app__;
+        const store = app.config.globalProperties.$pinia._s.get("app");
+        if (!store) {
+            throw new Error("Could not access the app store");
+        }
+        const validValues = new Set([
+            "Frame cursor",
+            ...Object.values(store.getFrameVisualNumbers).map((number) => `Frame ${number}`),
+        ]);
+        return inputs.map((input) => (input as HTMLInputElement).value)
+            .map((value) => ({value, isValid: validValues.has(value)}));
+    });
+    expect(inputValues.length).toBeGreaterThan(0);
+    inputValues.forEach(({value, isValid}) => {
+        expect(isValid).toBe(true);
+    });
+});
+
 test("updates the focused caret label after moving down", async ({page}) => {
-    await page.locator("#caret_caretBody_of_frame_-3_focusInput").focus();
+    const originalInput = page.locator("#caret_caretBody_of_frame_-3_focusInput");
+    await originalInput.focus();
+    const originalValue = await originalInput.inputValue();
     await page.keyboard.press("ArrowDown");
 
     const focusedInput = page.locator(".caret-container-focus-input-wrapper input:focus");
     await expect(focusedInput).toHaveAttribute("aria-label", /Next frame:/);
     await expect(focusedInput).not.toHaveAttribute("aria-label", "Next frame: frame");
+    await expect(focusedInput).toHaveValue("Frame 4");
+    await expect(originalInput).toHaveValue(originalValue);
 });
 
 test("includes comment text in the next-frame label", async ({page}) => {

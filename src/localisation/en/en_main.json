@@ -35,6 +35,8 @@
     "comment_desc": "comment"
   },
   "accessibility": {
+    "frameCursorInput": "Frame cursor",
+    "frameCursorInputHint": "Frame {number}",
     "nextFrame": "Next frame: {description}",
     "nextFrameBody": "Next position: body of {description}",
     "endOfContainer": "End of {description} container",
