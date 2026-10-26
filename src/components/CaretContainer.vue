@@ -581,6 +581,11 @@ export default defineComponent({
                 if (!hasPotentialNextFrame) {
                     return this.$t("accessibility.noNextFrame");
                 }
+                if (structuralNextFrame?.isDisabled) {
+                    return this.$t("accessibility.nextFrameDisabled", {
+                        description: this.$t("accessibility.genericFrame"),
+                    });
+                }
                 return nextFramePotentiallyHasBody
                     ? this.$t("accessibility.nextFrameBody", {description: this.$t("accessibility.genericFrame")})
                     : this.$t("accessibility.nextFrame", {description: this.$t("accessibility.genericFrame")});
@@ -592,9 +597,13 @@ export default defineComponent({
             }
 
             const frameDescription = describeFrame(frame);
-            const description = nextPosition.caretPosition === CaretPosition.body
-                ? this.$t("accessibility.nextFrameBody", {description: frameDescription})
-                : this.$t("accessibility.nextFrame", {description: frameDescription});
+            const description = frame.isDisabled
+                ? this.$t(nextPosition.caretPosition === CaretPosition.body
+                    ? "accessibility.nextFrameBodyDisabled"
+                    : "accessibility.nextFrameDisabled", {description: frameDescription})
+                : nextPosition.caretPosition === CaretPosition.body
+                    ? this.$t("accessibility.nextFrameBody", {description: frameDescription})
+                    : this.$t("accessibility.nextFrame", {description: frameDescription});
 
             let ancestorId = getParentOrJointParent(frame.id);
             let scopeDescription = "";

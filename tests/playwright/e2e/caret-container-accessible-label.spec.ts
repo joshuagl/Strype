@@ -15,32 +15,26 @@ test("describes the next frame at each frame-caret position", async ({page}) => 
     expect(labels.join(" ")).toContain("myString");
 });
 
-test("uses the following frame number in the frame cursor input", async ({page}) => {
-    await enterCode(page, ["", "", "rollDie(20)"]);
+test("announces when the next frame is disabled", async ({page}) => {
+    await enterCode(page, ["", "", "someCall()"]);
     await waitForEditorSettled(page);
-    const cursorBeforeRollDie = page.locator(".caret-container-focus-input-wrapper input[aria-label^=\"Next frame: rollDie\"]");
-    await expect(cursorBeforeRollDie).toHaveCount(1);
-    await expect(cursorBeforeRollDie).toHaveValue("Frame 1");
-});
-
-test("uses visible document frame numbers for frame cursors", async ({page}) => {
-    const inputValues = await page.locator(".caret-container-focus-input-wrapper input").evaluateAll((inputs) => {
-        const app = (document.getElementById("app") as unknown as {__vue_app__: {config: {globalProperties: {$pinia: {_s: Map<string, {getFrameVisualNumbers: Record<number, number>}>}}}}}).__vue_app__;
+    await page.evaluate(async () => {
+        const app = (document.getElementById("app") as unknown as {__vue_app__: {config: {globalProperties: {$pinia: {_s: Map<string, any>}}}}}).__vue_app__;
         const store = app.config.globalProperties.$pinia._s.get("app");
         if (!store) {
             throw new Error("Could not access the app store");
         }
-        const validValues = new Set([
-            "Frame cursor",
-            ...Object.values(store.getFrameVisualNumbers).map((number) => `Frame ${number}`),
-        ]);
-        return inputs.map((input) => (input as HTMLInputElement).value)
-            .map((value) => ({value, isValid: validValues.has(value)}));
+        const firstMainFrameId = store.frameObjects[-3].childrenIds[0];
+        store.frameObjects[firstMainFrameId].isDisabled = true;
+        store.setCurrentFrame({id: -3, caretPosition: "caretBody"});
+        await new Promise(requestAnimationFrame);
     });
-    expect(inputValues.length).toBeGreaterThan(0);
-    inputValues.forEach(({value, isValid}) => {
-        expect(isValid).toBe(true);
-    });
+
+    const input = page.locator("#caret_caretBody_of_frame_-3_focusInput");
+    await expect(input)
+        .toHaveAttribute("aria-label", /^Next frame disabled, /);
+    await input.focus();
+    await expect(input).toHaveValue("Frame 1");
 });
 
 test("updates the focused caret label after moving down", async ({page}) => {
