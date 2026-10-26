@@ -1,6 +1,6 @@
 import {expect, test} from "@playwright/test";
 import {setupStrypeTest} from "../support/general";
-import {pressFrameShortcut, waitForEditorSettled} from "../support/editor";
+import {enterCode, pressFrameShortcut, waitForEditorSettled} from "../support/editor";
 
 test.beforeEach(async ({page, browserName}, testInfo) => {
     await setupStrypeTest(page, browserName, testInfo, {skipPyodide: true});
@@ -22,6 +22,14 @@ test("updates the focused caret label after moving down", async ({page}) => {
     const focusedInput = page.locator(".caret-container-focus-input-wrapper input:focus");
     await expect(focusedInput).toHaveAttribute("aria-label", /Next frame:/);
     await expect(focusedInput).not.toHaveAttribute("aria-label", "Next frame: frame");
+});
+
+test("includes comment text in the next-frame label", async ({page}) => {
+    await enterCode(page, ["", "def demo():\n    value = 1\n    # read this comment\n    return value", ""]);
+
+    const labels = await page.locator(".caret-container-focus-input-wrapper input")
+        .evaluateAll((inputs) => inputs.map((input) => input.getAttribute("aria-label") ?? ""));
+    expect(labels.some((label) => label.includes("comment: read this comment") && label.includes("within def demo"))).toBe(true);
 });
 
 test("describes the body of a control structure at its final frame", async ({page}) => {

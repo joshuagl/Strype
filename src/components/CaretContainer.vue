@@ -90,9 +90,20 @@ const sectionContainerTypes = [
     ContainerTypesIdentifiers.framesMainContainer,
 ];
 
-function getFrameCodeDescription(frame: FrameObject, mediaDescription: string): string {
+function getFrameCodeDescription(frame: FrameObject, mediaDescription: string, commentDescription: string): string {
     return (frame.frameType.labels ?? []).map((label, index) => {
-        if (frame.labelSlotsDict[index]?.shown === false || label.allowedSlotContent === AllowedSlotContent.FREE_TEXT_DOCUMENTATION) {
+        if (frame.labelSlotsDict[index]?.shown === false) {
+            return "";
+        }
+
+        const slotStructure = frame.labelSlotsDict[index]?.slotStructures;
+        const slotText = slotStructure
+            ? slotStructureParserToString(slotStructure, {slotTypeRepacerMap: {[SlotType.media]: mediaDescription}}).join("").trim()
+            : "";
+        if (frame.frameType.type === AllFrameTypesIdentifier.comment) {
+            return slotText ? `${commentDescription}: ${slotText}` : commentDescription;
+        }
+        if (label.allowedSlotContent === AllowedSlotContent.FREE_TEXT_DOCUMENTATION) {
             return "";
         }
 
@@ -104,10 +115,6 @@ function getFrameCodeDescription(frame: FrameObject, mediaDescription: string): 
             // Decode hexadecimal HTML character references into unicode strings,
             // i.e. &#x21D0; becomes ⇐.
             .replace(/&#x([0-9a-f]+);/gi, (_match, codePoint: string) => String.fromCodePoint(parseInt(codePoint, 16)));
-        const slotStructure = frame.labelSlotsDict[index]?.slotStructures;
-        const slotText = slotStructure
-            ? slotStructureParserToString(slotStructure, {slotTypeRepacerMap: {[SlotType.media]: mediaDescription}}).join("").trim()
-            : "";
         const content = label.showSlots === false ? "" : (slotText || label.defaultText);
         return labelText + content;
     // Collapse whitespace from joined labels and slots, then remove leading/trailing space.
@@ -505,7 +512,11 @@ export default defineComponent({
                 && (structuralNextFrame.collapsedState ?? CollapsedState.FULLY_VISIBLE) === CollapsedState.FULLY_VISIBLE;
 
             const describeFrame = (frameToDescribe: FrameObject): string => {
-                const codeDescription = getFrameCodeDescription(frameToDescribe, this.$t("accessibility.media"));
+                const codeDescription = getFrameCodeDescription(
+                    frameToDescribe,
+                    this.$t("accessibility.media"),
+                    this.$t("frame.comment_desc")
+                );
                 if (codeDescription) {
                     return codeDescription;
                 }
