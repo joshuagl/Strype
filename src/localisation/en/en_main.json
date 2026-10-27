@@ -305,7 +305,7 @@
     "needSaveShareProj":"Save your project in the Cloud before sharing it",
     "lang": "Language: ",
     "frameNumbers": "Frame numbers:",
-    "sectionChangeSound": "Section change sound:",
+    "sectionChangeSound": "Section and indentation change sounds:",
     "homepage": "Strype Homepage",
     "apiDocumentation": "Library documentation...",
     "version": "Version",

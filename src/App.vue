@@ -148,7 +148,7 @@ import { getAPIItemTextualDescriptions } from "./helpers/microbitAPIDiscovery";
 import { DAPWrapper } from "./helpers/partial-flashing";
 // #v-endif
 import { mapStores } from "pinia";
-import {getAdjacentColourSlotInfos, getFlatNeighbourFieldSlotInfos, getSlotIdFromParentIdAndIndexSplit, getSlotParentIdAndIndexSplit, retrieveParentSlotFromSlotInfos, retrieveSlotFromSlotInfos, getFrameBelowCaretPosition, getFrameSectionIdFromFrameId, checkCodeErrors, calculateNextCollapseState, showIndexDBError} from "./helpers/storeMethods";
+import {getAdjacentColourSlotInfos, getFlatNeighbourFieldSlotInfos, getSlotIdFromParentIdAndIndexSplit, getSlotParentIdAndIndexSplit, retrieveParentSlotFromSlotInfos, retrieveSlotFromSlotInfos, getFrameBelowCaretPosition, getFrameSectionIdFromFrameId, getParentId, checkCodeErrors, calculateNextCollapseState, showIndexDBError} from "./helpers/storeMethods";
 import { createOrGetAudioContext } from "./helpers/audioContext";
 import { cloneDeep } from "lodash";
 import {pasteMixedPython} from "@/helpers/pythonToFrames";
@@ -287,6 +287,10 @@ export default defineComponent({
 
         currentFrameSectionId(): number {
             return getFrameSectionIdFromFrameId(this.appStore.currentFrame.id);
+        },
+
+        currentFramePosition(): [number, CaretPosition, boolean] {
+            return [this.appStore.currentFrame.id, this.appStore.currentFrame.caretPosition, this.appStore.isEditing];
         },
 
         showMessage(): boolean {
@@ -442,6 +446,27 @@ export default defineComponent({
                     this.playSectionChangeCue();
                 }
             }
+        },
+        currentFramePosition: {
+            handler(newPosition: [number, CaretPosition, boolean], oldPosition: [number, CaretPosition, boolean]) {
+                const [newFrameId, newCaretPosition, isEditing] = newPosition;
+                const [oldFrameId, oldCaretPosition, wasEditing] = oldPosition;
+                if (!this.settingsStore.sectionChangeSoundEnabled || newFrameId < 0) {
+                    return;
+                }
+                const frame = this.appStore.frameObjects[newFrameId];
+                const previousFrame = this.appStore.frameObjects[oldFrameId];
+                if (!frame || !previousFrame) {
+                    return;
+                }
+                const oldLevel = this.getCaretIndentationLevel(oldFrameId, oldCaretPosition, wasEditing);
+                const newLevel = this.getCaretIndentationLevel(newFrameId, newCaretPosition, isEditing);
+                const indentationChange = newLevel - oldLevel;
+                if (indentationChange !== 0) {
+                    this.playIndentationChangeCue(indentationChange, indentationChange > 0 ? newLevel : oldLevel);
+                }
+            },
+            flush: "post",
         },
     },
 
@@ -1038,6 +1063,59 @@ export default defineComponent({
             };
             oscillator.start(startTime);
             oscillator.stop(startTime + 0.13);
+        },
+
+        getFrameIndentationLevel(frameId: number): number {
+            let level = 0;
+            let frame = this.appStore.frameObjects[frameId];
+            while (frame && frame.id > 0) {
+                const parentId = getParentId(frame);
+                if (parentId <= 0) {
+                    break;
+                }
+                level++;
+                frame = this.appStore.frameObjects[parentId];
+            }
+            return level;
+        },
+
+        getCaretIndentationLevel(frameId: number, caretPosition: CaretPosition, isEditing: boolean): number {
+            const frame = this.appStore.frameObjects[frameId];
+            const isInsideScope = frameId > 0
+                && !isEditing
+                && caretPosition === CaretPosition.body
+                && frame?.frameType.allowChildren;
+            return this.getFrameIndentationLevel(frameId) + (isInsideScope ? 1 : 0);
+        },
+
+        playIndentationChangeCue(levelDifference: number, toneCount: number) {
+            const audioContext = createOrGetAudioContext();
+            const toneDuration = 0.1;
+            const toneInterval = 0.14;
+
+            for (let level = 0; level < toneCount; level++) {
+                const oscillator = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                const startTime = audioContext.currentTime + level * toneInterval;
+                const endTime = startTime + toneDuration;
+                const startFrequency = levelDifference > 0 ? 440 : 660;
+                const endFrequency = levelDifference > 0 ? 660 : 440;
+
+                oscillator.type = "triangle";
+                oscillator.frequency.setValueAtTime(startFrequency, startTime);
+                oscillator.frequency.exponentialRampToValueAtTime(endFrequency, endTime);
+                gain.gain.setValueAtTime(0.0001, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.03, startTime + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.0001, endTime);
+                oscillator.connect(gain);
+                gain.connect(audioContext.destination);
+                oscillator.onended = () => {
+                    oscillator.disconnect();
+                    gain.disconnect();
+                };
+                oscillator.start(startTime);
+                oscillator.stop(endTime);
+            }
         },
 
         onFrameActionAnnouncement(announcement: FrameActionAnnouncement) {
