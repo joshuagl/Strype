@@ -24,7 +24,7 @@
                 spellcheck="false"
                 inputmode="none"
                 :value="frameCursorInputValue"
-                :aria-label="accessibleLabel"
+                :aria-label="frameCursorAccessibleLabel"
                 @input="clearFocusInputContent"
             />
         </div>
@@ -181,6 +181,12 @@ export default defineComponent({
             },
             flush: "post",
         },
+        frameVisualNumbersKey: {
+            handler() {
+                this.updateFrameCursorInputValue();
+            },
+            flush: "post",
+        },
     },
 
     computed: {
@@ -188,6 +194,16 @@ export default defineComponent({
 
         currentCaretPositionKey(): string {
             return `${this.appStore.currentFrame.id}:${this.appStore.currentFrame.caretPosition}`;
+        },
+
+        frameCursorAccessibleLabel(): string {
+            return [this.accessibleLabel, this.frameCursorNumberLabel].filter(Boolean).join(" ");
+        },
+
+        frameVisualNumbersKey(): string {
+            return Object.entries(this.appStore.getFrameVisualNumbers)
+                .map(([frameId, number]) => `${frameId}:${number}`)
+                .join(",");
         },
         
         isEditing(): boolean {
@@ -259,7 +275,8 @@ export default defineComponent({
             areFramesDraggedOver: false,
             areDropFramesAllowed: true,
             isDuplicateDnDAction: false,
-            frameCursorInputValue: "",
+            frameCursorInputValue: "\u200B", // Silent, non-empty value avoids NVDA announcing "blank".
+            frameCursorNumberLabel: "",
             accessibleLabel: "",
             // Flag used to trigger the context menu opening
             showContextMenu: false,
@@ -272,7 +289,10 @@ export default defineComponent({
     mounted() {
         window.addEventListener("paste", this.pasteIfFocused);
         document.addEventListener(CustomEventTypes.scrollCaretIntoView, this.onScrollCaretIntoView);
-        this.$nextTick(() => this.updateAccessibleLabel());
+        this.$nextTick(() => {
+            this.updateAccessibleLabel();
+            this.updateFrameCursorInputValue();
+        });
         // When a frame is added, we need to make sure it will be visible in the view port. This is particularly true
         // when a paste or duplicate action is performed.
         this.putCaretContainerInView(true);
@@ -290,10 +310,6 @@ export default defineComponent({
     methods: {
         updateAccessibleLabel() {
             this.accessibleLabel = this.computeAccessibleLabel();
-            if (this.frameId === this.appStore.currentFrame.id
-                && this.caretAssignedPosition === this.appStore.currentFrame.caretPosition) {
-                this.updateFrameCursorInputValue();
-            }
         },
 
         updateFrameCursorInputValue() {
@@ -304,8 +320,8 @@ export default defineComponent({
             const frameNumber = nextPosition
                 ? this.appStore.getFrameVisualNumbers[nextPosition.id]
                 : undefined;
-            this.frameCursorInputValue = frameNumber === undefined
-                ? this.$t("accessibility.frameCursorInput")
+            this.frameCursorNumberLabel = frameNumber === undefined
+                ? ""
                 : this.$t("accessibility.frameCursorInputHint", {number: frameNumber});
         },
 
@@ -344,8 +360,7 @@ export default defineComponent({
             this.putCaretContainerInView();
         },
         
-        // Clears out the invisible paste-focus input's content to prevent stray characters (not caught
-        // by a shortcut handler or typing --> frame insertion) lingering forever.
+        // Reset the invisible paste-focus input after stray typing to preserve its silent non-empty value.
         clearFocusInputContent(event: Event) {
             (event.target as HTMLInputElement).value = this.frameCursorInputValue;
         },

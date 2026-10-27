@@ -13,6 +13,10 @@ test("describes the next frame at each frame-caret position", async ({page}) => 
     const labels = await focusInputs.evaluateAll((inputs) => inputs.map((input) => input.getAttribute("aria-label") ?? ""));
     expect(labels.every((label) => label.length > 0)).toBe(true);
     expect(labels.join(" ")).toContain("myString");
+
+    const firstCaretInput = page.locator("#caret_caretBody_of_frame_-3_focusInput");
+    await expect(firstCaretInput).toHaveAttribute("aria-label", /Frame 3$/);
+    await expect(firstCaretInput).toHaveValue("\u200B");
 });
 
 test("announces when the next frame is disabled", async ({page}) => {
@@ -32,22 +36,42 @@ test("announces when the next frame is disabled", async ({page}) => {
 
     const input = page.locator("#caret_caretBody_of_frame_-3_focusInput");
     await expect(input)
-        .toHaveAttribute("aria-label", /^Next frame disabled, /);
+        .toHaveAttribute("aria-label", /^Next frame disabled, .+ Frame 1$/);
     await input.focus();
-    await expect(input).toHaveValue("Frame 1");
+    await expect(input).toHaveValue("\u200B");
 });
 
 test("updates the focused caret label after moving down", async ({page}) => {
     const originalInput = page.locator("#caret_caretBody_of_frame_-3_focusInput");
     await originalInput.focus();
-    const originalValue = await originalInput.inputValue();
+    await expect(originalInput).toHaveAttribute("aria-label", /Frame 3$/);
     await page.keyboard.press("ArrowDown");
 
     const focusedInput = page.locator(".caret-container-focus-input-wrapper input:focus");
-    await expect(focusedInput).toHaveAttribute("aria-label", /Next frame:/);
-    await expect(focusedInput).not.toHaveAttribute("aria-label", "Next frame: frame");
-    await expect(focusedInput).toHaveValue("Frame 4");
-    await expect(originalInput).toHaveValue(originalValue);
+    await expect(focusedInput).toHaveAttribute("aria-label", /Next frame:.+ Frame 4$/);
+    await expect(focusedInput).toHaveValue("\u200B");
+    await expect(originalInput).toHaveValue("\u200B");
+});
+
+test("refreshes frame cursor numbers when visual frame order changes", async ({page}) => {
+    const firstMainFrameId = await page.evaluate(() => {
+        const app = (document.getElementById("app") as unknown as {__vue_app__: {config: {globalProperties: {$pinia: {_s: Map<string, any>}}}}}).__vue_app__;
+        const store = app.config.globalProperties.$pinia._s.get("app");
+        const mainFrameIds = store.frameObjects[-3].childrenIds;
+        if (mainFrameIds.length < 2) {
+            throw new Error("The main section needs at least two frames to test renumbering");
+        }
+        return mainFrameIds[0] as number;
+    });
+
+    const input = page.locator(`#caret_caretBelow_of_frame_${firstMainFrameId}_focusInput`);
+    const originalLabel = await input.getAttribute("aria-label");
+    await page.evaluate(() => {
+        const app = (document.getElementById("app") as unknown as {__vue_app__: {config: {globalProperties: {$pinia: {_s: Map<string, any>}}}}}).__vue_app__;
+        const store = app.config.globalProperties.$pinia._s.get("app");
+        store.frameObjects[-3].childrenIds.reverse();
+    });
+    await expect(input).not.toHaveAttribute("aria-label", originalLabel ?? "");
 });
 
 test("includes comment text in the next-frame label", async ({page}) => {
@@ -89,7 +113,7 @@ test("describes the body of a control structure at its final frame", async ({pag
     expect(lastBodyFrameId).toBeDefined();
 
     const endCaretLabel = page.locator(`#caret_caretBelow_of_frame_${lastBodyFrameId}_focusInput`);
-    await expect(endCaretLabel).toHaveAttribute("aria-label", "Next position: body of for ch in myString");
+    await expect(endCaretLabel).toHaveAttribute("aria-label", "Next position: body of for ch in myString Frame 5");
 });
 
 test("describes the end of a container", async ({page}) => {
