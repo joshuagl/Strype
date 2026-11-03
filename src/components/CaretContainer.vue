@@ -53,16 +53,17 @@
 //      Imports     //
 //////////////////////
 import { defineComponent, PropType } from "vue";
-import { useStore } from "@/store/store";
+import { settingsStore, useStore } from "@/store/store";
 import Caret from"@/components/Caret.vue";
-import {AllFrameTypesIdentifier, AllowedSlotContent, CaretPosition, Position, PythonExecRunningState, CollapsedState, StrypeContextMenuItem, CoordPosition, FrameObject, FrozenState, SlotType, ContainerTypesIdentifiers} from "@/types/types";
+import {AllFrameTypesIdentifier, AllowedSlotContent, BaseSlot, CaretPosition, Position, PythonExecRunningState, CollapsedState, StrypeContextMenuItem, CoordPosition, FrameObject, FrozenState, SlotType, ContainerTypesIdentifiers} from "@/types/types";
 import { getCaretUID, setContextMenuEventClientXY, getAddFrameCmdElementUID, CustomEventTypes, getCaretContainerUID, getCaretContainerFocusInputUID, getEditorMiddleUID, slotStructureParserToString } from "@/helpers/editor";
 import { mapStores } from "pinia";
 import { cloneDeep } from "lodash";
 import { pasteMixedPython } from "@/helpers/pythonToFrames";
 import scssVars  from "@/assets/style/_export.module.scss";
 import { vueComponentsAPIHandler } from "@/helpers/vueComponentAPI";
-import { getAboveFrameCaretPosition, getNextFrameCaretPosition, getParentOrJointParent } from "@/helpers/storeMethods";
+import { getAboveFrameCaretPosition, getNextFrameCaretPosition, getParentOrJointParent, retrieveSlotByPredicate } from "@/helpers/storeMethods";
+import { createOrGetAudioContext } from "@/helpers/audioContext";
 // #v-ifdef STRYPE_PLATFORM == VITE_STANDARD_PYTHON_MODE
 import { getFrameDefType, MediaDataAndDim} from "@/types/types";
 import { getFrameLabelSlotsStructureUID, getLabelSlotUID } from "@/helpers/editor";
@@ -178,6 +179,16 @@ export default defineComponent({
         currentCaretPositionKey: {
             handler() {
                 this.updateAccessibleLabel();
+                if (this.frameId === this.appStore.currentFrame.id
+                    && this.caretAssignedPosition === this.appStore.currentFrame.caretPosition) {
+                    this.playWarningToneForNextFrame();
+                }
+            },
+            flush: "post",
+        },
+        nextFrameWarningKey: {
+            handler() {
+                this.updateAccessibleLabel();
             },
             flush: "post",
         },
@@ -190,10 +201,14 @@ export default defineComponent({
     },
 
     computed: {
-        ...mapStores(useStore),
+        ...mapStores(useStore, settingsStore),
 
         currentCaretPositionKey(): string {
             return `${this.appStore.currentFrame.id}:${this.appStore.currentFrame.caretPosition}`;
+        },
+
+        nextFrameWarningKey(): string {
+            return this.getNextFrameInfo().warning.description;
         },
 
         frameCursorAccessibleLabel(): string {
@@ -310,6 +325,82 @@ export default defineComponent({
     methods: {
         updateAccessibleLabel() {
             this.accessibleLabel = this.computeAccessibleLabel();
+        },
+
+        getNextFrameInfo() {
+            const nextPosition = getNextFrameCaretPosition(
+                {id: this.frameId, caretPosition: this.caretAssignedPosition},
+                "down"
+            );
+            const frame = nextPosition
+                ? this.appStore.frameObjects[nextPosition.id]
+                : undefined;
+            return {
+                nextPosition,
+                frame,
+                warning: frame ? this.frameWarning(frame) : {hasWarning: false, description: ""},
+            };
+        },
+
+        frameWarning(frame: FrameObject): {hasWarning: boolean; description: string} {
+            const erroneousSlot = retrieveSlotByPredicate(
+                Object.values(frame.labelSlotsDict).map((labelSlot) => labelSlot.slotStructures),
+                (slot) => Boolean((slot as BaseSlot).error)
+            );
+            const hasParsingError = Boolean(frame.atParsingError);
+            const hasRuntimeError = Boolean(frame.runTimeError);
+            const wasLastRuntimeError = this.appStore.wasLastRuntimeErrorFrameId === frame.id;
+            const hasWarning = hasParsingError || hasRuntimeError || wasLastRuntimeError || Boolean(erroneousSlot?.error);
+            const issueDescriptions: string[] = [];
+
+            if (hasParsingError) {
+                issueDescriptions.push(this.$t("accessibility.parsingErrorInFrame", {message: frame.atParsingError}));
+            }
+            else if (hasRuntimeError) {
+                issueDescriptions.push(this.$t("accessibility.runtimeErrorInFrame", {message: frame.runTimeError}));
+            }
+            else if (wasLastRuntimeError) {
+                issueDescriptions.push(this.$t("errorMessage.pastFrameErrTitle"));
+            }
+            if (erroneousSlot?.error) {
+                issueDescriptions.push(`${erroneousSlot.errorTitle || this.$t("errorMessage.errorTitle")}: ${erroneousSlot.error}`);
+            }
+
+            return {hasWarning, description: issueDescriptions.join(". ")};
+        },
+
+        playWarningToneForNextFrame() {
+            if (!this.settingsStore.sectionChangeSoundEnabled) {
+                return;
+            }
+            const {frame, warning} = this.getNextFrameInfo();
+            if (!frame || !warning.hasWarning) {
+                return;
+            }
+
+            const audioContext = createOrGetAudioContext();
+            const toneDuration = 0.1;
+            const toneInterval = 0.14;
+            [880, 660].forEach((frequency, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                const startTime = audioContext.currentTime + index * toneInterval;
+                const endTime = startTime + toneDuration;
+
+                oscillator.type = "sine";
+                oscillator.frequency.setValueAtTime(frequency, startTime);
+                gain.gain.setValueAtTime(0.0001, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.035, startTime + 0.015);
+                gain.gain.exponentialRampToValueAtTime(0.0001, endTime);
+                oscillator.connect(gain);
+                gain.connect(audioContext.destination);
+                oscillator.onended = () => {
+                    oscillator.disconnect();
+                    gain.disconnect();
+                };
+                oscillator.start(startTime);
+                oscillator.stop(endTime);
+            });
         },
 
         updateFrameCursorInputValue() {
@@ -588,10 +679,8 @@ export default defineComponent({
                 return this.$t("accessibility.endOfContainer", {description});
             }
 
-            const nextPosition = getNextFrameCaretPosition(
-                {id: this.frameId, caretPosition: this.caretAssignedPosition},
-                "down"
-            );
+            const nextFrameInfo = this.getNextFrameInfo();
+            const nextPosition = nextFrameInfo.nextPosition;
             if (!nextPosition) {
                 if (!hasPotentialNextFrame) {
                     return this.$t("accessibility.noNextFrame");
@@ -606,12 +695,17 @@ export default defineComponent({
                     : this.$t("accessibility.nextFrame", {description: this.$t("accessibility.genericFrame")});
             }
 
-            const frame = this.appStore.frameObjects[nextPosition.id];
+            const frame = nextFrameInfo.frame;
             if (!frame) {
                 return this.$t("accessibility.noNextFrame");
             }
 
-            const frameDescription = describeFrame(frame);
+            const frameDescription = [
+                describeFrame(frame),
+                ...(nextFrameInfo.warning.description
+                    ? [this.$t("accessibility.frameWarning", {message: nextFrameInfo.warning.description})]
+                    : []),
+            ].join(". ");
             const description = frame.isDisabled
                 ? this.$t(nextPosition.caretPosition === CaretPosition.body
                     ? "accessibility.nextFrameBodyDisabled"

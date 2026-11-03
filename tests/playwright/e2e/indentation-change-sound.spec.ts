@@ -107,6 +107,29 @@ test("plays a cue when inserting a scope-changing frame", async ({page}) => {
     expect(tones.map((tone) => tone.frequency)).toEqual([440]);
 });
 
+test("plays a warning tone when the next frame has a runtime warning", async ({page}) => {
+    await enterCode(page, ["", "", "print('warning')"]);
+    await page.evaluate(async () => {
+        const app = (document.getElementById("app") as any).__vue_app__;
+        const store = app.config.globalProperties.$pinia._s.get("app");
+        const nextFrameId = store.frameObjects[-3].childrenIds[0];
+        store.frameObjects[nextFrameId].runTimeError = "Example runtime issue";
+        store.setCurrentFrame({id: -3, caretPosition: "caretBelow"});
+        await new Promise(requestAnimationFrame);
+        await new Promise(requestAnimationFrame);
+        (window as unknown as {editorToneStarts: unknown[]}).editorToneStarts = [];
+        store.setCurrentFrame({id: -3, caretPosition: "caretBody"});
+        await new Promise(requestAnimationFrame);
+        await new Promise(requestAnimationFrame);
+    });
+
+    const tones = await page.evaluate(() => (window as unknown as {
+        editorToneStarts: {type: OscillatorType; frequency: number}[];
+    }).editorToneStarts);
+    expect(tones.map((tone) => tone.frequency)).toEqual([880, 660]);
+    expect(tones.every((tone) => tone.type === "sine")).toBe(true);
+});
+
 test("does not play a dedent cue when entering an else body", async ({page}) => {
     await enterCode(page, ["", "", "if True:\n    print('if')\nelse:\n    print('else')"]);
     const frameIds = await page.evaluate(() => {

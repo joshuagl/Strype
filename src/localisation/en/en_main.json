@@ -50,6 +50,7 @@
     "genericFrame": "frame",
     "media": "media",
     "noNextFrame": "No frame below",
+    "frameWarning": "Warning: {message}",
     "runtimeErrorAnnouncement": "Runtime error: {message}",
     "runtimeErrorInFrame": "Runtime error: {message}",
     "codeErrorsAnnouncement": "Code errors found ({count}). First error: {message}",

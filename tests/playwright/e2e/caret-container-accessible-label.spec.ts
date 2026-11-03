@@ -41,6 +41,37 @@ test("announces when the next frame is disabled", async ({page}) => {
     await expect(input).toHaveValue("\u200B");
 });
 
+test("describes an issue on the next frame", async ({page}) => {
+    await page.evaluate(async () => {
+        const app = (document.getElementById("app") as unknown as {__vue_app__: {config: {globalProperties: {$pinia: {_s: Map<string, any>}}}}}).__vue_app__;
+        const store = app.config.globalProperties.$pinia._s.get("app");
+        const nextFrameId = store.frameObjects[-3].childrenIds[0];
+        store.frameObjects[nextFrameId].runTimeError = "Example runtime issue";
+        store.setCurrentFrame({id: nextFrameId, caretPosition: "caretBelow"});
+        await new Promise(requestAnimationFrame);
+        store.setCurrentFrame({id: -3, caretPosition: "caretBody"});
+        await new Promise(requestAnimationFrame);
+    });
+
+    const input = page.locator("#caret_caretBody_of_frame_-3_focusInput");
+    await expect(input).toHaveAttribute("aria-label", /Warning: Runtime error: Example runtime issue/);
+    await page.evaluate(() => {
+        const app = (document.getElementById("app") as unknown as {__vue_app__: {config: {globalProperties: {$pinia: {_s: Map<string, any>}}}}}).__vue_app__;
+        const store = app.config.globalProperties.$pinia._s.get("app");
+        const nextFrameId = store.frameObjects[-3].childrenIds[0];
+        store.frameObjects[nextFrameId].runTimeError = "";
+        store.frameObjects[nextFrameId].atParsingError = "Example parsing issue";
+    });
+    await expect(input).toHaveAttribute("aria-label", /Warning: Parsing error: Example parsing issue/);
+    await page.evaluate(() => {
+        const app = (document.getElementById("app") as unknown as {__vue_app__: {config: {globalProperties: {$pinia: {_s: Map<string, any>}}}}}).__vue_app__;
+        const store = app.config.globalProperties.$pinia._s.get("app");
+        const nextFrameId = store.frameObjects[-3].childrenIds[0];
+        store.frameObjects[nextFrameId].atParsingError = "";
+    });
+    await expect(input).not.toHaveAttribute("aria-label", /Warning:/);
+});
+
 test("updates the focused caret label after moving down", async ({page}) => {
     const originalInput = page.locator("#caret_caretBody_of_frame_-3_focusInput");
     await originalInput.focus();
