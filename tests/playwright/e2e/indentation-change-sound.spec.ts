@@ -123,6 +123,8 @@ test("plays a warning tone when the next frame has a runtime warning", async ({p
         await new Promise(requestAnimationFrame);
     });
 
+    await expect(page.locator("[role='mark']")).toHaveCount(1);
+
     const tones = await page.evaluate(() => (window as unknown as {
         editorToneStarts: {type: OscillatorType; frequency: number}[];
     }).editorToneStarts);

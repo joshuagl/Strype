@@ -10,6 +10,7 @@
             :class="{[scssVars.frameDivClassName]: true, blockFrameDiv: isBlockFrame && !isJointFrame, statementFrameDiv: !isBlockFrame && !isJointFrame, [scssVars.errorClassName]: hasParsingError, [scssVars.precompileErrorClassName]: hasParsingError, disabled: isDisabled}"
             :id="UID"
             :data-frameType="frameType.type"
+            :role="hasRuntimeError || wasLastRuntimeError || hasErroneousSlot ? 'mark' : undefined"
             @click="toggleCaret($event)"
             @contextmenu="handleClick($event)"
             tabindex="-1"
@@ -45,6 +46,7 @@
                 :erroneous="hasRuntimeError"
                 :wasLastRuntimeError="wasLastRuntimeError"
                 :onFocus="showFrameParseErrorPopupOnHeaderFocus"
+                @slot-warning-change="hasErroneousSlot = $event"
             />
             <span
                 v-if="hasRuntimeError || wasLastRuntimeError"
@@ -202,6 +204,7 @@ export default defineComponent({
             // We keep a data property for frame run time error, even if that's a duplication, we need to keep it because
             // when the error in the frame is lifted, the error message disappear, and we need to use it in the popup
             runtimeErrorAtLastRunMsg: "",
+            hasErroneousSlot: false,
         };
     },
 

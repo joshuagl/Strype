@@ -110,7 +110,7 @@ export default defineComponent({
         // (we don't set it in setup() because we want to have this accessible, and the component created!)
         const apiMethods = {
             setHasErroneousSlot: (value: boolean) => {
-                this.hasErroneousSlot = value;
+                this.setHasErroneousSlot(value);
             },
         };
         
@@ -158,6 +158,8 @@ export default defineComponent({
         errorDescriptionId: String,
         onFocus: {type: Function, required: true}, // Handler for focus/blur the header (see Frame.vue)
     },
+
+    emits: ["slotWarningChange"],
 
     computed:{
         ...mapStores(useStore),
@@ -255,7 +257,12 @@ export default defineComponent({
         },
 
         onLabelSlotContainsError(): void {            
-            this.hasErroneousSlot = true;
+            this.setHasErroneousSlot(true);
+        },
+
+        setHasErroneousSlot(value: boolean): void {
+            this.hasErroneousSlot = value;
+            this.$emit("slotWarningChange", value);
         },
     },
 });
