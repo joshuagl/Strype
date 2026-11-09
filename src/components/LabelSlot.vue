@@ -27,6 +27,7 @@
             :class="{[scssVars.labelSlotInputClassName]: true, [scssVars.navigationPositionClassName]: isEditableSlot && !isFrozen, [scssVars.errorSlotClassName]: erroneous(), [scssVars.precompileErrorClassName]: erroneous(), [getSpanTypeClass]: true, bold: isEmphasised, readonly: (isPythonExecuting || isDisabled)}"
             :id="UID"
             :key="UID"
+            :aria-details="isErrorVisible ? errorDescriptionUID : frameErrorDetailsId"
             :style="spanBackgroundStyle"
             @input="onInput"
             @compositionend="onCompositionEnd"
@@ -155,6 +156,7 @@ export default defineComponent({
             required: true,
         },
         frameId: {type: Number, required: true},
+        frameErrorDetailsId: String,
         isDisabled: Boolean,
         isEditableSlot: Boolean,
         isEmphasised: Boolean,
@@ -541,7 +543,10 @@ export default defineComponent({
             const isErroneous = this.isErrorVisible;
             // The parent (label slot structure) notifies the grand-parent (the frame header) that a slot is erroneous
             if(isErroneous){
-                eventBus.emit(CustomEventTypes.notifyLabelSlotInError);
+                eventBus.emit(CustomEventTypes.notifyLabelSlotInError, {
+                    frameId: this.frameId,
+                    errorDescriptionUID: this.errorDescriptionUID,
+                });
             }
             return isErroneous;
         },

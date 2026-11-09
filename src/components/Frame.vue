@@ -10,7 +10,8 @@
             :class="{[scssVars.frameDivClassName]: true, blockFrameDiv: isBlockFrame && !isJointFrame, statementFrameDiv: !isBlockFrame && !isJointFrame, [scssVars.errorClassName]: hasParsingError, [scssVars.precompileErrorClassName]: hasParsingError, disabled: isDisabled}"
             :id="UID"
             :data-frameType="frameType.type"
-            :role="hasRuntimeError || wasLastRuntimeError || hasErroneousSlot ? 'mark' : undefined"
+            :role="hasParsingError || hasRuntimeError || wasLastRuntimeError || slotErrorDescriptionUID ? 'mark' : undefined"
+            :aria-details="errorDetailsDescriptionUID"
             @click="toggleCaret($event)"
             @contextmenu="handleClick($event)"
             tabindex="-1"
@@ -31,6 +32,7 @@
                 v-if="frameType.labels !== null"
                 :id="frameHeaderId"
                 :errorDescriptionId="frameErrorDescriptionIds"
+                :frameErrorDetailsId="frameErrorDetailsDescriptionUID"
                 :isDisabled="isDisabled"
                 v-blur="isDisabled || isBeingDraggedComputed"
                 :frameId="frameId"
@@ -46,7 +48,7 @@
                 :erroneous="hasRuntimeError"
                 :wasLastRuntimeError="wasLastRuntimeError"
                 :onFocus="showFrameParseErrorPopupOnHeaderFocus"
-                @slot-warning-change="hasErroneousSlot = $event"
+                @slot-warning-change="slotErrorDescriptionUID = $event"
             />
             <span
                 v-if="hasRuntimeError || wasLastRuntimeError"
@@ -204,7 +206,7 @@ export default defineComponent({
             // We keep a data property for frame run time error, even if that's a duplication, we need to keep it because
             // when the error in the frame is lifted, the error message disappear, and we need to use it in the popup
             runtimeErrorAtLastRunMsg: "",
-            hasErroneousSlot: false,
+            slotErrorDescriptionUID: undefined as string | undefined,
         };
     },
 
@@ -302,6 +304,20 @@ export default defineComponent({
 
         wasLastRuntimeError(): boolean {
             return this.appStore.wasLastRuntimeErrorFrameId == this.frameId;
+        },
+
+        frameErrorDetailsDescriptionUID(): string | undefined {
+            if (this.hasParsingError) {
+                return this.parsingErrorDescriptionUID;
+            }
+            if (this.hasRuntimeError || this.wasLastRuntimeError) {
+                return this.runtimeErrorDescriptionUID;
+            }
+            return undefined;
+        },
+
+        errorDetailsDescriptionUID(): string | undefined {
+            return this.frameErrorDetailsDescriptionUID ?? this.slotErrorDescriptionUID;
         },
 
         errorPopupTitle(): string {

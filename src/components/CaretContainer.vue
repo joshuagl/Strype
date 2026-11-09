@@ -25,6 +25,7 @@
                 inputmode="none"
                 :value="frameCursorInputValue"
                 :aria-label="frameCursorAccessibleLabel"
+                :aria-details="frameCursorDetailsUID"
                 @input="clearFocusInputContent"
             />
         </div>
@@ -55,18 +56,18 @@
 import { defineComponent, PropType } from "vue";
 import { settingsStore, useStore } from "@/store/store";
 import Caret from"@/components/Caret.vue";
-import {AllFrameTypesIdentifier, AllowedSlotContent, BaseSlot, CaretPosition, Position, PythonExecRunningState, CollapsedState, StrypeContextMenuItem, CoordPosition, FrameObject, FrozenState, SlotType, ContainerTypesIdentifiers} from "@/types/types";
+import {AllFrameTypesIdentifier, AllowedSlotContent, CaretPosition, Position, PythonExecRunningState, CollapsedState, StrypeContextMenuItem, CoordPosition, FrameObject, FrozenState, SlotType, ContainerTypesIdentifiers} from "@/types/types";
 import { getCaretUID, setContextMenuEventClientXY, getAddFrameCmdElementUID, CustomEventTypes, getCaretContainerUID, getCaretContainerFocusInputUID, getEditorMiddleUID, slotStructureParserToString } from "@/helpers/editor";
 import { mapStores } from "pinia";
 import { cloneDeep } from "lodash";
 import { pasteMixedPython } from "@/helpers/pythonToFrames";
 import scssVars  from "@/assets/style/_export.module.scss";
 import { vueComponentsAPIHandler } from "@/helpers/vueComponentAPI";
-import { getAboveFrameCaretPosition, getNextFrameCaretPosition, getParentOrJointParent, retrieveSlotByPredicate } from "@/helpers/storeMethods";
+import { getAboveFrameCaretPosition, getNextFrameCaretPosition, getParentOrJointParent } from "@/helpers/storeMethods";
 import { createOrGetAudioContext } from "@/helpers/audioContext";
 // #v-ifdef STRYPE_PLATFORM == VITE_STANDARD_PYTHON_MODE
 import { getFrameDefType, MediaDataAndDim} from "@/types/types";
-import { getFrameLabelSlotsStructureUID, getLabelSlotUID } from "@/helpers/editor";
+import { getFrameLabelSlotsStructureUID, getLabelSlotErrorDescriptionUID, getLabelSlotUID } from "@/helpers/editor";
 import { preparePasteMediaData } from "@/helpers/media";
 // #v-endif
 
@@ -208,7 +209,8 @@ export default defineComponent({
         },
 
         nextFrameWarningKey(): string {
-            return this.getNextFrameInfo().warning.description;
+            const {frame, warning} = this.getNextFrameInfo();
+            return `${frame?.id ?? ""}:${warning.hasWarning}:${warning.detailsUID ?? ""}`;
         },
 
         frameCursorAccessibleLabel(): string {
@@ -293,6 +295,7 @@ export default defineComponent({
             frameCursorInputValue: "\u200B", // Silent, non-empty value avoids NVDA announcing "blank".
             frameCursorNumberLabel: "",
             accessibleLabel: "",
+            frameCursorDetailsUID: undefined as string | undefined,
             // Flag used to trigger the context menu opening
             showContextMenu: false,
             // Prepare an empty version of the menu: it will be updated as required in handleClick()
@@ -325,6 +328,7 @@ export default defineComponent({
     methods: {
         updateAccessibleLabel() {
             this.accessibleLabel = this.computeAccessibleLabel();
+            this.frameCursorDetailsUID = this.getNextFrameInfo().warning.detailsUID;
         },
 
         getNextFrameInfo() {
@@ -338,35 +342,37 @@ export default defineComponent({
             return {
                 nextPosition,
                 frame,
-                warning: frame ? this.frameWarning(frame) : {hasWarning: false, description: ""},
+                warning: frame ? this.frameWarning(frame) : {hasWarning: false},
             };
         },
 
-        frameWarning(frame: FrameObject): {hasWarning: boolean; description: string} {
-            const erroneousSlot = retrieveSlotByPredicate(
-                Object.values(frame.labelSlotsDict).map((labelSlot) => labelSlot.slotStructures),
-                (slot) => Boolean((slot as BaseSlot).error)
-            );
+        frameWarning(frame: FrameObject): {hasWarning: boolean; detailsUID?: string} {
             const hasParsingError = Boolean(frame.atParsingError);
             const hasRuntimeError = Boolean(frame.runTimeError);
             const wasLastRuntimeError = this.appStore.wasLastRuntimeErrorFrameId === frame.id;
-            const hasWarning = hasParsingError || hasRuntimeError || wasLastRuntimeError || Boolean(erroneousSlot?.error);
-            const issueDescriptions: string[] = [];
-
             if (hasParsingError) {
-                issueDescriptions.push(this.$t("accessibility.parsingErrorInFrame", {message: frame.atParsingError}));
+                return {hasWarning: true, detailsUID: `parsingErrorDescription_frame_${frame.id}`};
             }
-            else if (hasRuntimeError) {
-                issueDescriptions.push(this.$t("accessibility.runtimeErrorInFrame", {message: frame.runTimeError}));
-            }
-            else if (wasLastRuntimeError) {
-                issueDescriptions.push(this.$t("errorMessage.pastFrameErrTitle"));
-            }
-            if (erroneousSlot?.error) {
-                issueDescriptions.push(`${erroneousSlot.errorTitle || this.$t("errorMessage.errorTitle")}: ${erroneousSlot.error}`);
+            if (hasRuntimeError || wasLastRuntimeError) {
+                return {hasWarning: true, detailsUID: `runtimeErrorDescription_frame_${frame.id}`};
             }
 
-            return {hasWarning, description: issueDescriptions.join(". ")};
+            for (const labelIndex of Object.keys(frame.labelSlotsDict).map(Number)) {
+                const erroneousSlot = this.appStore.getFlatSlotBases(frame.id, labelIndex)
+                    .find((slot) => Boolean(slot.error));
+                if (erroneousSlot) {
+                    return {
+                        hasWarning: true,
+                        detailsUID: getLabelSlotErrorDescriptionUID({
+                            frameId: frame.id,
+                            labelSlotsIndex: labelIndex,
+                            slotId: erroneousSlot.id,
+                            slotType: erroneousSlot.type,
+                        }),
+                    };
+                }
+            }
+            return {hasWarning: false};
         },
 
         playWarningToneForNextFrame() {
@@ -700,12 +706,9 @@ export default defineComponent({
                 return this.$t("accessibility.noNextFrame");
             }
 
-            const frameDescription = [
-                describeFrame(frame),
-                ...(nextFrameInfo.warning.description
-                    ? [this.$t("accessibility.frameWarning", {message: nextFrameInfo.warning.description})]
-                    : []),
-            ].join(". ");
+            const frameDescription = nextFrameInfo.warning.hasWarning
+                ? this.$t("accessibility.frameWithIssue", {description: describeFrame(frame)})
+                : describeFrame(frame);
             const description = frame.isDisabled
                 ? this.$t(nextPosition.caretPosition === CaretPosition.body
                     ? "accessibility.nextFrameBodyDisabled"

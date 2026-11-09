@@ -41,8 +41,9 @@ test("announces when the next frame is disabled", async ({page}) => {
     await expect(input).toHaveValue("\u200B");
 });
 
-test("describes an issue on the next frame", async ({page}) => {
-    await page.evaluate(async () => {
+test("marks a next frame with a frame error", async ({page}) => {
+    await enterCode(page, ["", "", "print('Brrrrrrr')"]);
+    const nextFrameId = await page.evaluate(async () => {
         const app = (document.getElementById("app") as unknown as {__vue_app__: {config: {globalProperties: {$pinia: {_s: Map<string, any>}}}}}).__vue_app__;
         const store = app.config.globalProperties.$pinia._s.get("app");
         const nextFrameId = store.frameObjects[-3].childrenIds[0];
@@ -51,25 +52,123 @@ test("describes an issue on the next frame", async ({page}) => {
         await new Promise(requestAnimationFrame);
         store.setCurrentFrame({id: -3, caretPosition: "caretBody"});
         await new Promise(requestAnimationFrame);
+        return nextFrameId as number;
     });
 
     const input = page.locator("#caret_caretBody_of_frame_-3_focusInput");
-    await expect(input).toHaveAttribute("aria-label", /Warning: Runtime error: Example runtime issue/);
-    await page.evaluate(() => {
+    const nextFrame = page.locator(`#frame_id_${nextFrameId}`);
+    const errorDetailsId = `runtimeErrorDescription_frame_${nextFrameId}`;
+    const slotCursor = page.locator(`#labelSlotsStruct${nextFrameId}_0`);
+    await expect(input).toHaveAttribute("aria-label", /frame with an issue/);
+    await expect(input).toHaveAttribute("aria-details", errorDetailsId);
+    await expect(nextFrame).toHaveAttribute("role", "mark");
+    await expect(nextFrame).toHaveAttribute("aria-details", errorDetailsId);
+    await expect(page.locator(`#${errorDetailsId}`)).toContainText("Example runtime issue");
+    await slotCursor.focus();
+    await expect(slotCursor).toHaveAttribute("aria-details", errorDetailsId);
+    await expect(slotCursor.locator("[id^='input_frame_']").first()).toHaveAttribute("aria-details", errorDetailsId);
+});
+
+test("clears stale slot error details while editing", async ({page}) => {
+    await enterCode(page, ["", "", "print('Brrrrrrr')"]);
+    const {nextFrameId, labelIndex, slotUID, slotErrorDescriptionUID} = await page.evaluate(async () => {
         const app = (document.getElementById("app") as unknown as {__vue_app__: {config: {globalProperties: {$pinia: {_s: Map<string, any>}}}}}).__vue_app__;
         const store = app.config.globalProperties.$pinia._s.get("app");
         const nextFrameId = store.frameObjects[-3].childrenIds[0];
-        store.frameObjects[nextFrameId].runTimeError = "";
-        store.frameObjects[nextFrameId].atParsingError = "Example parsing issue";
+        const labelIndex = Number(Object.keys(store.frameObjects[nextFrameId].labelSlotsDict)[0]);
+        const slot = store.getFlatSlotBases(nextFrameId, labelIndex)[0];
+        const slotUID = `input_frame_${nextFrameId}_label_${labelIndex}_slot_${slot.type.toString(8).padStart(8, "0")}_${slot.id}`;
+        store.setSlotErroneous({
+            frameId: nextFrameId,
+            labelSlotsIndex: labelIndex,
+            slotId: slot.id,
+            slotType: slot.type,
+            error: "Example slot issue",
+            errorTitle: "Slot error",
+        });
+        const slotCursorInfos = {
+            slotInfos: {
+                frameId: nextFrameId,
+                labelSlotsIndex: labelIndex,
+                slotId: slot.id,
+                slotType: slot.type,
+            },
+            cursorPos: 0,
+        };
+        store.setSlotTextCursors(slotCursorInfos, slotCursorInfos);
+        store.setCurrentFrame({id: -3, caretPosition: "caretBody"});
+        await new Promise(requestAnimationFrame);
+        return {
+            nextFrameId: nextFrameId as number,
+            labelIndex,
+            slotUID,
+            slotErrorDescriptionUID: `errorDescription_${slotUID}`,
+        };
     });
-    await expect(input).toHaveAttribute("aria-label", /Warning: Parsing error: Example parsing issue/);
-    await page.evaluate(() => {
+    const input = page.locator("#caret_caretBody_of_frame_-3_focusInput");
+    const nextFrame = page.locator(`#frame_id_${nextFrameId}`);
+    const slotCursor = page.locator(`#labelSlotsStruct${nextFrameId}_${labelIndex}`);
+    const editableSlot = slotCursor.locator(`#${slotUID}`);
+    await expect(input).toHaveAttribute("aria-label", /frame with an issue/);
+    await expect(input).toHaveAttribute("aria-details", slotErrorDescriptionUID);
+    await expect(nextFrame).toHaveAttribute("role", "mark");
+    await expect(nextFrame).toHaveAttribute("aria-details", slotErrorDescriptionUID);
+    await expect(slotCursor).toHaveAttribute("aria-details", slotErrorDescriptionUID);
+    await expect(slotCursor.locator("[id^='input_frame_']").first()).toHaveAttribute("aria-details", slotErrorDescriptionUID);
+    await expect(page.locator(`#${slotErrorDescriptionUID}`)).toContainText("Example slot issue");
+
+    await editableSlot.click();
+    await page.keyboard.press("End");
+    await page.keyboard.type("x");
+    await expect(input).not.toHaveAttribute("aria-label", /frame with an issue/);
+    await expect(input).not.toHaveAttribute("aria-details");
+    await expect(nextFrame).not.toHaveAttribute("role", "mark");
+    await expect(nextFrame).not.toHaveAttribute("aria-details");
+    await expect(page.locator(`#${slotErrorDescriptionUID}`)).toHaveCount(0);
+
+    await page.keyboard.type("#");
+    await page.keyboard.press("ArrowRight");
+    await waitForEditorSettled(page);
+    await expect(nextFrame).toHaveAttribute("role", "mark");
+    const restoredDetailsId = await nextFrame.getAttribute("aria-details");
+    expect(restoredDetailsId).not.toBeNull();
+    await expect(page.locator(`#${restoredDetailsId}`)).toHaveCount(1);
+});
+
+test("clears precompile diagnostics when slot content changes", async ({page}) => {
+    await enterCode(page, ["", "", "print('Brrrrrrr')"]);
+    const result = await page.evaluate(async () => {
         const app = (document.getElementById("app") as unknown as {__vue_app__: {config: {globalProperties: {$pinia: {_s: Map<string, any>}}}}}).__vue_app__;
         const store = app.config.globalProperties.$pinia._s.get("app");
-        const nextFrameId = store.frameObjects[-3].childrenIds[0];
-        store.frameObjects[nextFrameId].atParsingError = "";
+        const frameId = store.frameObjects[-3].childrenIds[0];
+        const labelIndex = Number(Object.keys(store.frameObjects[frameId].labelSlotsDict)[0]);
+        const slot = store.getFlatSlotBases(frameId, labelIndex)[0];
+        const slotUID = `input_frame_${frameId}_label_${labelIndex}_slot_${slot.type.toString(8).padStart(8, "0")}_${slot.id}`;
+        store.setSlotErroneous({
+            frameId,
+            labelSlotsIndex: labelIndex,
+            slotId: slot.id,
+            slotType: slot.type,
+            error: "Example precompile issue",
+        });
+        store.addPreCompileErrors(slotUID);
+        await store.setFrameEditableSlotContent({
+            frameId,
+            labelSlotsIndex: labelIndex,
+            slotId: slot.id,
+            slotType: slot.type,
+            code: `${slot.code}x`,
+            initCode: slot.code,
+            isFirstChange: true,
+        });
+        return {
+            hasError: Boolean(slot.error),
+            hasErrorTitle: slot.errorTitle !== undefined,
+            hasPrecompileError: store.preCompileErrors.includes(slotUID),
+        };
     });
-    await expect(input).not.toHaveAttribute("aria-label", /Warning:/);
+
+    expect(result).toEqual({hasError: false, hasErrorTitle: false, hasPrecompileError: false});
 });
 
 test("updates the focused caret label after moving down", async ({page}) => {

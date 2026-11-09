@@ -12,6 +12,7 @@
         :aria-activedescendant="autocompleteOpen ? autocompleteActiveDescendant ?? undefined : undefined"
         :aria-invalid="focusedSlotError ? 'true' : undefined"
         :aria-describedby="focusedSlotErrorDescriptionUID"
+        :aria-details="focusedSlotErrorDescriptionUID ?? frameErrorDetailsId"
         @keydown.left="onLRKeyDown($event)"
         @keydown.right="onLRKeyDown($event)"
         @keydown.up="slotUpDown($event)"
@@ -39,6 +40,7 @@
                 :paramPromptPending="paramPromptPending[slotIndex] ?? false"
                 :code="getSlotCode(slotItem)"
                 :frameId="frameId"
+                :frameErrorDetailsId="frameErrorDetailsId"
                 :isEditableSlot="isEditableSlot(slotItem.type)"
                 :isFrozen="isFrozen"
                 :isEmphasised="isSlotEmphasised(slotItem)"
@@ -231,6 +233,7 @@ export default defineComponent({
     props: {
         frameId: {type: Number, required: true},
         labelIndex: {type: Number, required: true},
+        frameErrorDetailsId: String,
         defaultText: String,
         isDisabled: Boolean,
         isFrozen: Boolean,

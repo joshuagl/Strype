@@ -1786,7 +1786,14 @@ export const useStore = defineStore("app", {
             const stateBeforeChanges = cloneDeep(this.$state);
 
             const destSlot = retrieveSlotFromSlotInfos(frameSlotInfos) as BaseSlot;
+            const codeChanged = destSlot.code !== frameSlotInfos.code;
             destSlot.code = frameSlotInfos.code;
+            if (codeChanged) {
+                // Discard diagnostics for the old content; the normal validation pass can restore them.
+                destSlot.error = "";
+                delete destSlot.errorTitle;
+                this.removePreCompileErrors(getLabelSlotUID(frameSlotInfos));
+            }
             if (frameSlotInfos.mediaType) {
                 (destSlot as MediaSlot).mediaType = frameSlotInfos.mediaType;
             }

@@ -22,8 +22,8 @@
                     :default-text="item.defaultText"
                     :frameId="frameId"
                     :labelIndex="originalIndex"
+                    :frameErrorDetailsId="frameErrorDetailsId"
                     :prependSelfWhenInClass="item.appendSelfWhenInClass"
-                    @[CustomEventTypes.notifyLabelSlotInError]="onLabelSlotContainsError"
                 />
                 <!-- ^^ Note: append to frame label is same as prepend to slot -->
             </div>
@@ -67,6 +67,7 @@ import { isMacOSPlatform } from "@/helpers/common";
 import { calculateNextCollapseState } from "@/helpers/storeMethods";
 import { CustomEventTypes } from "@/helpers/editor";
 import { vueComponentsAPIHandler } from "@/helpers/vueComponentAPI";
+import { eventBus } from "@/helpers/appContext";
 
 // Splits into a list of lists (each outer list is a line, with 1 or more items on it)
 // by looking at the newLine flag in the FrameLabel.
@@ -96,6 +97,10 @@ function splitAtNewLines(labels : FrameLabel[], state: CollapsedState) : {item: 
 //////////////////////
 export default defineComponent({
     name: "FrameHeader",
+
+    created() {
+        eventBus.on(CustomEventTypes.notifyLabelSlotInError, this.onLabelSlotContainsError);
+    },
 
     mounted(){
         // It is better to register the component API here rather than in created().
@@ -127,6 +132,8 @@ export default defineComponent({
     },
 
     unmounted() {
+        eventBus.off(CustomEventTypes.notifyLabelSlotInError, this.onLabelSlotContainsError);
+
         // Remove the component's API instance
         if(vueComponentsAPIHandler.frameHeaderComponentAPI?.forInstance[this.frameId]){
             delete vueComponentsAPIHandler.frameHeaderComponentAPI?.forInstance[this.frameId];
@@ -156,6 +163,7 @@ export default defineComponent({
         erroneous: Boolean,
         wasLastRuntimeError: Boolean,
         errorDescriptionId: String,
+        frameErrorDetailsId: String,
         onFocus: {type: Function, required: true}, // Handler for focus/blur the header (see Frame.vue)
     },
 
@@ -230,8 +238,8 @@ export default defineComponent({
 
     data(){
         return {
-            CustomEventTypes, // just to be able to use in template
             hasErroneousSlot: false,
+            slotErrorDescriptionUID: "",
         };
     },
 
@@ -256,13 +264,16 @@ export default defineComponent({
             }
         },
 
-        onLabelSlotContainsError(): void {            
-            this.setHasErroneousSlot(true);
+        onLabelSlotContainsError(payload: {frameId: number; errorDescriptionUID: string}): void {
+            if (payload.frameId === this.frameId && !this.hasErroneousSlot) {
+                this.setHasErroneousSlot(true, payload.errorDescriptionUID);
+            }
         },
 
-        setHasErroneousSlot(value: boolean): void {
+        setHasErroneousSlot(value: boolean, errorDescriptionUID?: string): void {
             this.hasErroneousSlot = value;
-            this.$emit("slotWarningChange", value);
+            this.slotErrorDescriptionUID = value ? (errorDescriptionUID ?? this.slotErrorDescriptionUID) : "";
+            this.$emit("slotWarningChange", this.slotErrorDescriptionUID || undefined);
         },
     },
 });
