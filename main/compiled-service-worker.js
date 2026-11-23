@@ -1,7 +1,6 @@
-//#region \0rolldown/runtime.js
-var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
-//#endregion
-//#region src/workers/service-worker.ts
+// \0rolldown/runtime.js
+var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod, mod.exports), cb = null), mod.exports);
+// src/workers/service-worker.ts
 var import_dist = (/* @__PURE__ */ __commonJSMin(((exports, module) => {
 	(function(e, t) {
 		"object" == typeof exports && "object" == typeof module ? module.exports = t() : "function" == typeof define && define.amd ? define([], t) : "object" == typeof exports ? exports.syncMessage = t() : e.syncMessage = t();
@@ -207,7 +206,7 @@ var import_dist = (/* @__PURE__ */ __commonJSMin(((exports, module) => {
 			} : function() {
 				return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, ((e) => {
 					const t = Number(e);
-					return (t ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> t / 4).toString(16);
+					return (t ^ crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(1))[0] & 15 >> t / 4).toString(16);
 				}));
 			}, t;
 		})();
@@ -230,4 +229,3 @@ var syncMessageFetchListener = (0, import_dist.serviceWorkerFetchListener)();
 self.addEventListener("fetch", (e) => {
 	if (e instanceof FetchEvent) syncMessageFetchListener(e);
 });
-//#endregion
